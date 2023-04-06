@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
+ 
 use App\Models\User;
 
 class UserController extends Controller
@@ -41,16 +43,36 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try{
+            $validator = Validator::make($request->all(), [
+                'name' => [
+                    'required',
+                ],
+                'email' => [
+                    'required'
+                ],
+                'password' => [
+                    'required'
+                ],
+            ]);
+
+            if($validator->fails()){
+                return response([
+                    'message' => 'data missing',
+                    'detail' => $validator->errors()
+                ], 400)->header('Content-Type', 'json');
+            }
+
             $pass = Hash::make($request->input('password'));
             $user = User::create([
                 'email' => $request->input('email'),
                 'name' => $request->input('name'),
                 'password' => $pass,
             ]);
+            event(new Registered($user));
             return $user;
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
-                'message' => 'Datos no guardados',
+                'message' =>  $ex->errorInfo[0] === 23000 ? 'Usuario registrado' : 'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }

@@ -62,6 +62,6 @@ return [
     */
 
     'sha512' => [
-        'salt' => 'iTpMsOfTwArE2020'
+        'salt' => env('SALT')
     ],
 ];
