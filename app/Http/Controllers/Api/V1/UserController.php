@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
+use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\User;
 
@@ -68,11 +69,21 @@ class UserController extends Controller
                 'name' => $request->input('name'),
                 'password' => $pass,
             ]);
+            
+            $token = JWTAuth::fromUser($user);
             event(new Registered($user));
-            return $user;
+
+            return response()->json([
+                'message' => 'Usuario registrado exitosamente',
+                'data' => [
+                    'name' => $user->name,
+                    'email' => $user->email
+                ],
+                'token' => $token
+            ], 201);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
-                'message' =>  $ex->errorInfo[0] === 23000 ? 'Usuario registrado' : 'Datos no guardados',
+                'message' =>  $ex->errorInfo[0] === "23000" ? 'Usuario registrado' : 'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }

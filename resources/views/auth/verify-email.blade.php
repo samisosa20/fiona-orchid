@@ -1,1 +1,1 @@
-hello world
+<p>Tu correo a sido verificado exitosamente!</p>
