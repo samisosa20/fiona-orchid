@@ -97,7 +97,8 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        unset($user->password);
+        return response()->json($user);
     }
 
     /**
@@ -132,5 +133,42 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+
+    /**
+     * Display the specified user information.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function profile()
+    {
+        $user = JWTAuth::user();
+        unset($user->password);
+        return response()->json($user);
+    }
+
+    /**
+     * Display the specified user information.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = JWTAuth::user();
+            User::find($user->id)
+            ->update([
+                'name' => $request->input('name',)
+            ]);
+            return response()->json([
+                'message' => 'Datos guardados'
+            ]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Datos no guardados',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
     }
 }

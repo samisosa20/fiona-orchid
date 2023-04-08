@@ -17,8 +17,10 @@ use App\Http\Controllers\Api\V1\AuthController;
 |
 */
 
-Route::middleware(['auth', 'verified'])->prefix('v1')->group(function () {
+Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     Route::apiResource('/users', UserController::class);
+    Route::get('/profile', [UserController::class, 'profile']);
+    Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
