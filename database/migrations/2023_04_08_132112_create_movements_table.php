@@ -23,7 +23,7 @@ return new class extends Migration
             ->references('id')
             ->on('categories')
             ->onUpdate('cascade');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->decimal('amount', $precision = 15, $scale = 2);
             $table->decimal('trm', $precision = 15, $scale = 2)->default(1);
             $table->dateTime('date_purchase');
