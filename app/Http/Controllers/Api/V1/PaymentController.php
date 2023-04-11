@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
  
-use App\Models\Event;
+use App\Models\PlannedPayment;
 
-class EventController extends Controller
+class PaymentController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -20,12 +20,12 @@ class EventController extends Controller
     public function index()
     {
         $user = JWTAuth::user();
-        $events = Event::where([
+        $payments = PlannedPayment::where([
             ['user_id', $user->id]
         ])
         ->get();
 
-        return response()->json($events);
+        return response()->json($payments);
     }
 
     /**
@@ -48,12 +48,21 @@ class EventController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'account_id' => [
                     'required',
                 ],
-                'end_event' => [
+                'category_id' => [
+                    'required',
+                ],
+                'amount' => [
+                    'required',
+                ],
+                'start_date' => [
                     'required',
                     'date_format:Y-m-d'
+                ],
+                'specific_day' => [
+                    'required',
                 ],
             ]);
 
@@ -66,11 +75,11 @@ class EventController extends Controller
 
             $user = JWTAuth::user();
 
-            $event = Event::create(array_merge($request->input(), ['user_id' => $user->id]));
+            $payment = PlannedPayment::create(array_merge($request->input(), ['user_id' => $user->id]));
 
             return response()->json([
-                'message' => 'Evento creado exitosamente',
-                'data' => $event,
+                'message' => 'Pago creado exitosamente',
+                'data' => $payment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -83,21 +92,21 @@ class EventController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Event  $event
+     * @param  \App\Models\PlannedPayment  $payment
      * @return \Illuminate\Http\Response
      */
-    public function show(Event $event)
+    public function show(PlannedPayment $payment)
     {
-        return response()->json($event);
+        return response()->json($payment);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Event  $event
+     * @param  \App\Models\PlannedPayment  $payment
      * @return \Illuminate\Http\Response
      */
-    public function edit(Event $event)
+    public function edit(PlannedPayment $payment)
     {
         //
     }
@@ -106,19 +115,28 @@ class EventController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Event  $event
+     * @param  \App\Models\PlannedPayment  $payment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Event $event)
+    public function update(Request $request, PlannedPayment $payment)
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'account_id' => [
                     'required',
                 ],
-                'end_event' => [
+                'category_id' => [
+                    'required',
+                ],
+                'amount' => [
+                    'required',
+                ],
+                'start_date' => [
                     'required',
                     'date_format:Y-m-d'
+                ],
+                'specific_day' => [
+                    'required',
                 ],
             ]);
 
@@ -129,11 +147,11 @@ class EventController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $event->fill($request->input())->save();
+            $payment->fill($request->input())->save();
 
             return response()->json([
-                'message' => 'Evento editado exitosamente',
-                'data' => $event,
+                'message' => 'Pago editado exitosamente',
+                'data' => $payment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -146,16 +164,16 @@ class EventController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Event  $event
+     * @param  \App\Models\PlannedPayment  $payment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Event $event)
+    public function destroy(PlannedPayment $payment)
     {
         try {
-            $event->delete();
+            $payment->delete();
             return response()->json([
-                'message' => 'Evento eliminado exitosamente',
-                'data' => $event,
+                'message' => 'Pago eliminado exitosamente',
+                'data' => $payment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -165,20 +183,4 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * Display a listing of the resource that end_event less or equal today.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function active()
-    {
-        $user = JWTAuth::user();
-        $events = Event::where([
-            ['user_id', $user->id],
-        ])
-        ->whereDate('end_event', '>=', now())
-        ->get();
-
-        return response()->json($events);
-    }
 }

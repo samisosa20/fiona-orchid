@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('amount', $precision = 15, $scale = 2);
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->date('specific_day');
+            $table->integer('specific_day');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')
             ->references('id')

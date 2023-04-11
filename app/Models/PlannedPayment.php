@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\Category;
 
-class Planned extends Model
+class PlannedPayment extends Model
 {
     use HasFactory;
 
