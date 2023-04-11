@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\User;
+use App\Models\Movement;
 
 class Account extends Model
 {
@@ -50,5 +51,10 @@ class Account extends Model
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    
+    public function movements()
+    {
+        return $this->hasMany(Movement::class, 'account_id', 'id')->with(['account', 'category', 'event', 'transfer']);
     }
 }

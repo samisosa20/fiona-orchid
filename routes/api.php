@@ -26,6 +26,7 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     
     Route::apiResource('/accounts', AccountController::class);
     Route::post('/accounts/{id}/restore', [AccountController::class, 'restore']);
+    Route::get('/accounts/{id}/movements', [AccountController::class, 'movements']);
     
     Route::apiResource('/categories', CategoryController::class);
     Route::post('/categories/{id}/restore', [CategoryController::class, 'restore']);

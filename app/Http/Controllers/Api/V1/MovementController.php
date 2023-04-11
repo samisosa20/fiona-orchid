@@ -98,7 +98,7 @@ class MovementController extends Controller
                     'category_id' => $request->input('category_id'),
                     'description' => $request->input('description'),
                     'amount' => $request->input('amount') * -1,
-                    'trm' => $request->input('trm'),
+                    'trm' => $request->input('trm') ?? 1,
                     'date_purchase' => $request->input('date_purchase'),
                     'user_id' => $user->id,
                 ]);
@@ -109,7 +109,7 @@ class MovementController extends Controller
                     'category_id' => $request->input('category_id'),
                     'description' => $request->input('description'),
                     'amount' => $request->input('amount'),
-                    'trm' => $request->input('trm'),
+                    'trm' => $request->input('trm') ?? 1,
                     'date_purchase' => $request->input('date_purchase'),
                     'user_id' => $user->id,
                     'transfer_id' => $movement->id
@@ -173,7 +173,7 @@ class MovementController extends Controller
                 ],
                 'date_purchase' => [
                     'required',
-                    'datetime:Y-m-d H:i:s'
+                    'date_format:Y-m-d H:i:s'
                 ],
                 'type' => [
                     'required'
@@ -187,7 +187,73 @@ class MovementController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $movement->fill($request->input())->save();
+            if($request->input('type') === 'move') {
+                $movement->fill($request->input())->save();
+            } else {
+                $validator = Validator::make($request->all(), [
+                    'account_end_id' => [
+                        'required',
+                    ]
+                ]);
+    
+                if($validator->fails()){
+                    return response([
+                        'message' => 'data missing',
+                        'detail' => $validator->errors()
+                    ], 400)->header('Content-Type', 'json');
+                }
+
+                // if out move
+                if(!$movement->transfer_id) {
+                    $outData = [
+                        'account_id' => $request->input('account_id'),
+                        'category_id' => $request->input('category_id'),
+                        'description' => $request->input('description'),
+                        'amount' => $request->input('amount') * -1,
+                        'trm' => $request->input('trm') ?? 1,
+                        'date_purchase' => $request->input('date_purchase'),
+                    ];
+                    $movement->fill($outData)->save();
+
+                    $inData = [
+                        'account_id' => $request->input('account_end_id'),
+                        'category_id' => $request->input('category_id'),
+                        'description' => $request->input('description'),
+                        'amount' => $request->input('amount'),
+                        'trm' => $request->input('trm') ?? 1,
+                        'date_purchase' => $request->input('date_purchase'),
+                    ];
+                    $outMovement = Movement::where([
+                        ['transfer_id', $movement->id]
+                    ])->first();
+
+                    $outMovement ->fill($inData)->save();
+                } else {
+                    $outData = [
+                        'account_id' => $request->input('account_end_id'),
+                        'category_id' => $request->input('category_id'),
+                        'description' => $request->input('description'),
+                        'amount' => $request->input('amount'),
+                        'trm' => $request->input('trm') ?? 1,
+                        'date_purchase' => $request->input('date_purchase'),
+                    ];
+                    $movement->fill($outData)->save();
+
+                    $inData = [
+                        'account_id' => $request->input('account_id'),
+                        'category_id' => $request->input('category_id'),
+                        'description' => $request->input('description'),
+                        'amount' => $request->input('amount') * -1,
+                        'trm' => $request->input('trm') ?? 1,
+                        'date_purchase' => $request->input('date_purchase'),
+                    ];
+                    $inMovement = Movement::where([
+                        ['id', $movement->transfer_id]
+                    ])->first();
+
+                    $inMovement ->fill($inData)->save();
+                }
+            }
 
             return response()->json([
                 'message' => 'Movimiento editado exitosamente',

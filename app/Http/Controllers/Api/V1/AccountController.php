@@ -198,4 +198,26 @@ class AccountController extends Controller
             ], 400);
         }
     }
+    
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function movements(int $id)
+    {
+        try {
+            $account = Account::find($id);
+            return response()->json([
+                'message' => 'Carga exitosa',
+                'data' => $account->movements,
+            ]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Datos no guardados',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
 }
