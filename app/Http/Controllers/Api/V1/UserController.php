@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\Registered;
 use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\User;
+use App\Models\Category;
 
 class UserController extends Controller
 {
@@ -68,6 +69,12 @@ class UserController extends Controller
                 'email' => $request->input('email'),
                 'name' => $request->input('name'),
                 'password' => $pass,
+            ]);
+
+            Category::create([
+                'name' => 'Transferencia',
+                'group_id' => env('GROUP_TRANSFER_ID') ?? 1,
+                'user_id' => $user->id
             ]);
             
             $token = JWTAuth::fromUser($user);
