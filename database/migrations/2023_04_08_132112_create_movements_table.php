@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreign('account_id')
             ->references('id')
             ->on('accounts')
-            ->onUpdate('cascade');
+            ->onUpdate('cascade')
+            ->onDelete('cascade');
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')
             ->references('id')

@@ -8,25 +8,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
  
-use App\Models\Account;
+use App\Models\Budget;
 
-class AccountController extends Controller
+class BudgetController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = JWTAuth::user();
-        $accounts = Account::withTrashed()
-        ->where([
+        $budgets = Budget::where([
             ['user_id', $user->id]
         ])
+        ->when($request->query('year'), function ($query) use ($request) {
+            $query->where('year', $request->query('year'));
+        })
         ->get();
 
-        return response()->json($accounts);
+        return response()->json($budgets);
     }
 
     /**
@@ -49,18 +51,20 @@ class AccountController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'category_id' => [
+                    'required',
+                ],
+                'amount' => [
                     'required',
                 ],
                 'badge' => [
-                    'required'
-                ],
-                'init_amount' => [
-                    'required'
-                ],
-                'saving_account' => [
                     'required',
-                    'bool'
+                ],
+                'month' => [
+                    'required',
+                ],
+                'year' => [
+                    'required',
                 ],
             ]);
 
@@ -73,11 +77,11 @@ class AccountController extends Controller
 
             $user = JWTAuth::user();
 
-            $account = Account::create(array_merge($request->input(), ['user_id' => $user->id]));
+            $budget = Budget::create(array_merge($request->input(), ['user_id' => $user->id]));
 
             return response()->json([
-                'message' => 'Cuenta creada exitosamente',
-                'data' => $account,
+                'message' => 'Presupuesto creado exitosamente',
+                'data' => $budget,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -90,34 +94,21 @@ class AccountController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Budget $budget)
     {
-        $user = JWTAuth::user();
-        $data = Account::withTrashed()
-        ->where([
-            ['user_id', $user->id],
-            ['id', $id]
-        ])
-        ->first();
-        if($data) {
-            return response()->json($data);
-        }
-        return response([
-            'message' =>  'Datos no encontrados',
-            'detail' => 'La información no existe'
-        ], 400);
+        return response()->json($budget);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function edit(Account $account)
+    public function edit(Budget $budget)
     {
         //
     }
@@ -126,25 +117,27 @@ class AccountController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Account $account)
+    public function update(Request $request, Budget $budget)
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'category_id' => [
+                    'required',
+                ],
+                'amount' => [
                     'required',
                 ],
                 'badge' => [
-                    'required'
-                ],
-                'init_amount' => [
-                    'required'
-                ],
-                'saving_account' => [
                     'required',
-                    'bool'
+                ],
+                'month' => [
+                    'required',
+                ],
+                'year' => [
+                    'required',
                 ],
             ]);
 
@@ -155,11 +148,11 @@ class AccountController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $account->fill($request->input())->save();
+            $budget->fill($request->input())->save();
 
             return response()->json([
-                'message' => 'Cuenta editada exitosamente',
-                'data' => $account,
+                'message' => 'Presupuesto editado exitosamente',
+                'data' => $budget,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -172,16 +165,16 @@ class AccountController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Account $account)
+    public function destroy(Budget $budget)
     {
         try {
-            $account->delete();
+            $budget->delete();
             return response()->json([
-                'message' => 'Cuenta eliminada exitosamente',
-                'data' => $account,
+                'message' => 'Presupuesto eliminado exitosamente',
+                'data' => $budget,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -191,47 +184,4 @@ class AccountController extends Controller
         }
     }
 
-    /**
-     * Restore the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore($id)
-    {
-        try {
-            $account = Account::withTrashed()->find($id)->restore();
-            return response()->json([
-                'message' => 'Cuenta Activada exitosamente',
-                'data' => $account,
-            ]);
-        } catch(\Illuminate\Database\QueryException $ex){
-            return response([
-                'message' =>  'Datos no guardados',
-                'detail' => $ex->errorInfo[0]
-            ], 400);
-        }
-    }
-    
-    /**
-     * Restore the specified resource from storage.
-     *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function movements(int $id)
-    {
-        try {
-            $account = Account::find($id);
-            return response()->json([
-                'message' => 'Carga exitosa',
-                'data' => $account->movements,
-            ]);
-        } catch(\Illuminate\Database\QueryException $ex){
-            return response([
-                'message' =>  'Datos no guardados',
-                'detail' => $ex->errorInfo[0]
-            ], 400);
-        }
-    }
 }

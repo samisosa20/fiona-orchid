@@ -8,25 +8,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
  
-use App\Models\Account;
+use App\Models\Heritage;
 
-class AccountController extends Controller
+class HeritageController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = JWTAuth::user();
-        $accounts = Account::withTrashed()
-        ->where([
+        $heritages = Heritage::where([
             ['user_id', $user->id]
         ])
+        ->when($request->query('year'), function ($query) use ($request) {
+            $query->where('year', $request->query('year'));
+        })
         ->get();
 
-        return response()->json($accounts);
+        return response()->json($heritages);
     }
 
     /**
@@ -52,15 +54,17 @@ class AccountController extends Controller
                 'name' => [
                     'required',
                 ],
-                'badge' => [
-                    'required'
-                ],
-                'init_amount' => [
-                    'required'
-                ],
-                'saving_account' => [
+                'comercial_amount' => [
                     'required',
-                    'bool'
+                ],
+                'legal_amount' => [
+                    'required',
+                ],
+                'badge' => [
+                    'required',
+                ],
+                'year' => [
+                    'required',
                 ],
             ]);
 
@@ -73,11 +77,11 @@ class AccountController extends Controller
 
             $user = JWTAuth::user();
 
-            $account = Account::create(array_merge($request->input(), ['user_id' => $user->id]));
+            $heritage = Heritage::create(array_merge($request->input(), ['user_id' => $user->id]));
 
             return response()->json([
-                'message' => 'Cuenta creada exitosamente',
-                'data' => $account,
+                'message' => 'Patrimonio creado exitosamente',
+                'data' => $heritage,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -90,34 +94,21 @@ class AccountController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Heritage  $heritage
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Heritage $heritage)
     {
-        $user = JWTAuth::user();
-        $data = Account::withTrashed()
-        ->where([
-            ['user_id', $user->id],
-            ['id', $id]
-        ])
-        ->first();
-        if($data) {
-            return response()->json($data);
-        }
-        return response([
-            'message' =>  'Datos no encontrados',
-            'detail' => 'La información no existe'
-        ], 400);
+        return response()->json($heritage);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Heritage  $heritage
      * @return \Illuminate\Http\Response
      */
-    public function edit(Account $account)
+    public function edit(Heritage $heritage)
     {
         //
     }
@@ -126,25 +117,27 @@ class AccountController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Heritage  $heritage
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Account $account)
+    public function update(Request $request, Heritage $heritage)
     {
         try{
             $validator = Validator::make($request->all(), [
                 'name' => [
                     'required',
                 ],
-                'badge' => [
-                    'required'
-                ],
-                'init_amount' => [
-                    'required'
-                ],
-                'saving_account' => [
+                'comercial_amount' => [
                     'required',
-                    'bool'
+                ],
+                'legal_amount' => [
+                    'required',
+                ],
+                'badge' => [
+                    'required',
+                ],
+                'year' => [
+                    'required',
                 ],
             ]);
 
@@ -155,11 +148,11 @@ class AccountController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $account->fill($request->input())->save();
+            $heritage->fill($request->input())->save();
 
             return response()->json([
-                'message' => 'Cuenta editada exitosamente',
-                'data' => $account,
+                'message' => 'Patrimonio editado exitosamente',
+                'data' => $heritage,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -172,16 +165,16 @@ class AccountController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Heritage  $heritage
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Account $account)
+    public function destroy(Heritage $heritage)
     {
         try {
-            $account->delete();
+            $heritage->delete();
             return response()->json([
-                'message' => 'Cuenta eliminada exitosamente',
-                'data' => $account,
+                'message' => 'Patrimonio eliminado exitosamente',
+                'data' => $heritage,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -191,47 +184,4 @@ class AccountController extends Controller
         }
     }
 
-    /**
-     * Restore the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore($id)
-    {
-        try {
-            $account = Account::withTrashed()->find($id)->restore();
-            return response()->json([
-                'message' => 'Cuenta Activada exitosamente',
-                'data' => $account,
-            ]);
-        } catch(\Illuminate\Database\QueryException $ex){
-            return response([
-                'message' =>  'Datos no guardados',
-                'detail' => $ex->errorInfo[0]
-            ], 400);
-        }
-    }
-    
-    /**
-     * Restore the specified resource from storage.
-     *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function movements(int $id)
-    {
-        try {
-            $account = Account::find($id);
-            return response()->json([
-                'message' => 'Carga exitosa',
-                'data' => $account->movements,
-            ]);
-        } catch(\Illuminate\Database\QueryException $ex){
-            return response([
-                'message' =>  'Datos no guardados',
-                'detail' => $ex->errorInfo[0]
-            ], 400);
-        }
-    }
 }

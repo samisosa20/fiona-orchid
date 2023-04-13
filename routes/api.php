@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\HeritageController;
+use App\Http\Controllers\Api\V1\BudgetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,9 +41,9 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
 
     Route::apiResource('/payments', PaymentController::class);
     
-    Route::apiResource('/heritages', MovementController::class);
+    Route::apiResource('/heritages', HeritageController::class);
     
-    Route::apiResource('/budgets', MovementController::class);
+    Route::apiResource('/budgets', BudgetController::class);
 
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);

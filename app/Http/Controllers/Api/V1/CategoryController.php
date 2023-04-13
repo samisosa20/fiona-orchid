@@ -20,7 +20,8 @@ class CategoryController extends Controller
     public function index()
     {
         $user = JWTAuth::user();
-        $categorys = Category::where([
+        $categorys = Category::withTrashed()
+        ->where([
             ['user_id', $user->id]
         ])
         ->get();
@@ -82,12 +83,25 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Category  $category
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Category $category)
+    public function show($id)
     {
-        return response()->json($category);
+        $user = JWTAuth::user();
+        $data = Category::withTrashed()
+        ->where([
+            ['user_id', $user->id],
+            ['id', $id]
+        ])
+        ->first();
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
     }
 
     /**
