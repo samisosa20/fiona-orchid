@@ -99,13 +99,27 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\User  $user
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(User $user)
+    public function show($id)
     {
-        unset($user->password);
-        return response()->json($user);
+        $user = JWTAuth::user();
+
+        $data = User::withTrashed()
+        ->where([
+            ['user_id', $user->id],
+            ['id', $id]
+        ])
+        ->first();
+
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
     }
 
     /**
@@ -166,8 +180,15 @@ class UserController extends Controller
             $user = JWTAuth::user();
             User::find($user->id)
             ->update([
-                'name' => $request->input('name',)
+                'name' => $request->input('name'),
             ]);
+            
+            if($request->input('password')) {
+                User::find($user->id)
+                ->update([
+                    'password' => Hash::make($request->input('password'))
+                ]);
+            }
             return response()->json([
                 'message' => 'Datos guardados'
             ]);
