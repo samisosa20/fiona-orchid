@@ -60,7 +60,7 @@ class HeritageController extends Controller
                 'legal_amount' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required',
                 ],
                 'year' => [
@@ -133,7 +133,7 @@ class HeritageController extends Controller
                 'legal_amount' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required',
                 ],
                 'year' => [

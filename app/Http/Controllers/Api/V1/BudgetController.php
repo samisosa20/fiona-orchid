@@ -57,7 +57,7 @@ class BudgetController extends Controller
                 'amount' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required',
                 ],
                 'month' => [
@@ -130,7 +130,7 @@ class BudgetController extends Controller
                 'amount' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required',
                 ],
                 'month' => [

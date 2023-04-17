@@ -21,7 +21,7 @@ class Account extends Model
     protected $fillable = [
         'name',
         'description',
-        'badge',
+        'badge_id',
         'init_amount',
         'saving_account',
         'user_id',

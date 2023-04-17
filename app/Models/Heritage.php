@@ -20,7 +20,7 @@ class Heritage extends Model
         'name',
         'comercial_amount',
         'legal_amount',
-        'badge',
+        'badge_id',
         'year',
         'user_id',
     ];

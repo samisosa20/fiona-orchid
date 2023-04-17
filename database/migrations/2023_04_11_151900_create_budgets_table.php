@@ -19,7 +19,11 @@ return new class extends Migration
             ->on('categories')
             ->onUpdate('cascade');
             $table->decimal('amount', $precision = 15, $scale = 2);
-            $table->string('badge', 5);
+            $table->unsignedBigInteger('badge_id');
+            $table->foreign('badge_id')
+            ->references('id')
+            ->on('currencies')
+            ->onUpdate('cascade');
             $table->integer('month');
             $table->integer('year');
             $table->unsignedBigInteger('user_id');

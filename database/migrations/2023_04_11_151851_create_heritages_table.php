@@ -16,7 +16,11 @@ return new class extends Migration
             $table->string('name', 100);
             $table->decimal('comercial_amount', $precision = 15, $scale = 2);
             $table->decimal('legal_amount', $precision = 15, $scale = 2);
-            $table->string('badge', 5);
+            $table->unsignedBigInteger('badge_id');
+            $table->foreign('badge_id')
+            ->references('id')
+            ->on('currencies')
+            ->onUpdate('cascade');
             $table->integer('year');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')

@@ -52,7 +52,7 @@ class AccountController extends Controller
                 'name' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required'
                 ],
                 'init_amount' => [
@@ -136,7 +136,7 @@ class AccountController extends Controller
                 'name' => [
                     'required',
                 ],
-                'badge' => [
+                'badge_id' => [
                     'required'
                 ],
                 'init_amount' => [
