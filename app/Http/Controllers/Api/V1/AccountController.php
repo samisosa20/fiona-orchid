@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\Account;
+use App\Models\Movement;
 
 class AccountController extends Controller
 {
@@ -21,6 +22,8 @@ class AccountController extends Controller
     {
         $user = JWTAuth::user();
         $accounts = Account::withTrashed()
+        ->with(['currency'])
+        ->withBalance()
         ->where([
             ['user_id', $user->id]
         ])
@@ -58,9 +61,8 @@ class AccountController extends Controller
                 'init_amount' => [
                     'required'
                 ],
-                'saving_account' => [
+                'type' => [
                     'required',
-                    'bool'
                 ],
             ]);
 
@@ -97,6 +99,9 @@ class AccountController extends Controller
     {
         $user = JWTAuth::user();
         $data = Account::withTrashed()
+        ->with(['currency'])
+        ->withBalance()
+        ->withIncomeExpensiveWithoutTransf()
         ->where([
             ['user_id', $user->id],
             ['id', $id]
@@ -142,9 +147,8 @@ class AccountController extends Controller
                 'init_amount' => [
                     'required'
                 ],
-                'saving_account' => [
+                'type' => [
                     'required',
-                    'bool'
                 ],
             ]);
 
@@ -222,14 +226,18 @@ class AccountController extends Controller
     public function movements(int $id)
     {
         try {
-            $account = Account::find($id);
-            return response()->json([
-                'message' => 'Carga exitosa',
-                'data' => $account->movements,
-            ]);
+            $user = JWTAuth::user();
+            $movements = Movement::where([
+                ['account_id', $id],
+                ['user_id', $user->id],
+            ])
+            ->with(['account', 'category', 'event', 'transfer'])
+            ->orderBy('date_purchase', 'desc')
+            ->get();
+            return response()->json($movements);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
-                'message' =>  'Datos no guardados',
+                'message' =>  'Error al conseguir los datos',
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }

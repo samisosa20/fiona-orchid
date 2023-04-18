@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\HeritageController;
 use App\Http\Controllers\Api\V1\BudgetController;
+use App\Http\Controllers\Api\V1\GeneralController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,4 +56,5 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/password_reset', [AuthController::class, 'resetPassword']);
+    Route::get('/general', [GeneralController::class, 'general']);
 });

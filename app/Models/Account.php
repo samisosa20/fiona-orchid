@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use App\Models\Movement;
+use App\Models\Currency;
 
 class Account extends Model
 {
@@ -23,7 +25,7 @@ class Account extends Model
         'description',
         'badge_id',
         'init_amount',
-        'saving_account',
+        'type',
         'user_id',
     ];
 
@@ -56,5 +58,44 @@ class Account extends Model
     public function movements()
     {
         return $this->hasMany(Movement::class, 'account_id', 'id')->with(['account', 'category', 'event', 'transfer']);
+    }
+    
+    public function scopeWithBalance($query)
+    {
+        $query->addSelect([
+            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            ->whereColumn('movements.account_id', 'accounts.id')
+        ]);
+    }
+    
+    public function scopeWithIncomeExpensiveWithoutTransf($query)
+    {
+        $query->addSelect([
+            'incomes' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            ->whereColumn('movements.account_id', 'accounts.id')
+            ->whereHas('category', function ($query){
+                $query->where([
+                    ['group_id', '<>', env('GROUP_TRANSFER_ID')]
+                ]);
+            })
+            ->where([
+                ['amount', '>', 0]
+            ]),
+            'expensives' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            ->whereColumn('movements.account_id', 'accounts.id')
+            ->whereHas('category', function ($query){
+                $query->where([
+                    ['group_id', '<>', env('GROUP_TRANSFER_ID')]
+                ]);
+            })
+            ->where([
+                ['amount', '<', 0]
+            ])
+        ]);
+    }
+    
+    public function currency()
+    {
+        return $this->hasOne(Currency::class, 'id', 'badge_id');
     }
 }
