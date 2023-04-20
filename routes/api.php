@@ -35,6 +35,7 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     
     Route::apiResource('/categories', CategoryController::class);
     Route::post('/categories/{id}/restore', [CategoryController::class, 'restore']);
+    Route::get('/list/categories', [CategoryController::class, 'listCategories']);
     
     Route::apiResource('/events', EventController::class);
     Route::get('/active/events', [EventController::class, 'active']);

@@ -17,16 +17,30 @@ class CategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = JWTAuth::user();
-        $categorys = Category::withTrashed()
+        $categories = Category::withTrashed()
         ->where([
-            ['user_id', $user->id]
+            ['user_id', $user->id],
+            ['group_id', '<>', env('GROUP_TRANSFER_ID')]
         ])
+        ->with(['group', 'categoryFather'])
+        ->addSelect([
+            'sub_categories' => \DB::table('categories as b')
+            ->selectRaw('count(*)')
+            ->whereNull('b.deleted_at')
+            ->whereColumn('categories.id', 'b.category_id')
+        ])
+        ->when($request->query('category_father'), function ($query) use ($request) {
+            $query->where('category_id', $request->query('category_father'));
+        })
+        ->when(!$request->query('category_father'), function ($query) use ($request) {
+            $query->whereNull('category_id');
+        })
         ->get();
 
-        return response()->json($categorys);
+        return response()->json($categories);
     }
 
     /**
@@ -94,6 +108,7 @@ class CategoryController extends Controller
             ['user_id', $user->id],
             ['id', $id]
         ])
+        ->with(['group', 'categoryFather'])
         ->first();
         if($data) {
             return response()->json($data);
@@ -194,6 +209,32 @@ class CategoryController extends Controller
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' =>  'Datos no guardados',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function listCategories()
+    {
+        try {
+            $user = JWTAuth::user();
+            $movements = Category::where([
+                ['categories.user_id', $user->id],
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
+            ])
+            ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(b.name, "\n ", categories.name)) as title, categories.category_id as category_father')
+            ->leftJoin('categories as b', 'b.id', 'categories.category_id')
+            ->orderBy('categories.name')
+            ->get();
+            return response()->json($movements);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Error al conseguir los datos',
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }

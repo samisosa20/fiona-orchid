@@ -55,8 +55,13 @@ class Category extends Model
         return $this->hasOne(Group::class, 'id', 'group_id');
     }
     
-    public function category()
+    public function categoryFather()
     {
         return $this->hasOne(Category::class, 'id', 'category_id');
+    }
+    
+    public function subCategories()
+    {
+        return $this->hasMany(Category::class, 'category_id', 'id');
     }
 }

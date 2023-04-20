@@ -190,7 +190,11 @@ class UserController extends Controller
                 ]);
             }
             return response()->json([
-                'message' => 'Datos guardados'
+                'message' => 'Datos guardados',
+                'data' => [
+                    'name' => $request->input('name'),
+                    'email' => $request->input('email'),
+                ]
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
