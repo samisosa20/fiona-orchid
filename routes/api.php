@@ -31,6 +31,7 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     Route::apiResource('/accounts', AccountController::class);
     Route::post('/accounts/{id}/restore', [AccountController::class, 'restore']);
     Route::get('/accounts/{id}/movements', [AccountController::class, 'movements']);
+    Route::get('/balance', [AccountController::class, 'balances']);
     
     Route::apiResource('/categories', CategoryController::class);
     Route::post('/categories/{id}/restore', [CategoryController::class, 'restore']);
@@ -43,6 +44,7 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     Route::apiResource('/payments', PaymentController::class);
     
     Route::apiResource('/heritages', HeritageController::class);
+    Route::get('/consolidate/heritages', [HeritageController::class, 'consolidate']);
     
     Route::apiResource('/budgets', BudgetController::class);
 

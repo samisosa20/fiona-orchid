@@ -23,6 +23,7 @@ class EventController extends Controller
         $events = Event::where([
             ['user_id', $user->id]
         ])
+        ->withBalance()
         ->get();
 
         return response()->json($events);
@@ -83,11 +84,25 @@ class EventController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Event  $event
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Event $event)
+    public function show($id)
     {
+        $user = JWTAuth::user();
+        $data = Event::with(['movements'])
+        ->where([
+            ['user_id', $user->id],
+            ['id', $id]
+        ])
+        ->first();
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
         return response()->json($event);
     }
 
@@ -176,6 +191,14 @@ class EventController extends Controller
         $events = Event::where([
             ['user_id', $user->id],
         ])
+        ->withBalance()
+        /* ->with('movements')
+        ->with(['movements' => function ($query) {
+            $query->selectRaw('ifnull(sum(amount), 0), currencies.code as currency')
+            ->join('accounts', 'accounts.id', 'account_id')
+            ->join('currencies', 'currencies.id', 'badge_id')
+            ->groupBy('currencies.code');
+        }]) */
         ->whereDate('end_event', '>=', now())
         ->get();
 

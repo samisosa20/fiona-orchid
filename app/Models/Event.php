@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
+use App\Models\Movement;
 
 class Event extends Model
 {
@@ -45,6 +46,19 @@ class Event extends Model
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    
+    public function movements()
+    {
+        return $this->hasMany(Movement::class, 'event_id', 'id')->with(['account', 'category', 'event', 'transfer']);
+    }
+    
+    public function scopeWithBalance($query)
+    {
+        $query->addSelect([
+            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            ->whereColumn('movements.event_id', 'events.id')
+        ]);
     }
     
 }

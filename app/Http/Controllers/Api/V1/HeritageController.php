@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\DB;
  
 use App\Models\Heritage;
 
@@ -23,6 +24,7 @@ class HeritageController extends Controller
         $heritages = Heritage::where([
             ['user_id', $user->id]
         ])
+        ->with('currency')
         ->when($request->query('year'), function ($query) use ($request) {
             $query->where('year', $request->query('year'));
         })
@@ -182,6 +184,44 @@ class HeritageController extends Controller
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function consolidate(Request $request)
+    {
+        $user = JWTAuth::user();
+
+        $heritages = Heritage::where([
+            ['user_id', $user->id]
+        ])
+        ->distinct('year')
+        ->select('year')
+        ->get();
+        foreach ($heritages as &$value) {
+            $value->balance = Heritage::where([
+                ['user_id', $user->id],
+                ['year', $value->year]
+            ])
+            ->selectRaw('currencies.code as currency, cast(sum(comercial_amount) as float) as comercial_amount, cast(sum(legal_amount) as float) as legal_amount')
+            ->addSelect([
+                'movements' => DB::table('movements')
+                ->selectRaw('cast(ifnull(sum(amount), 0) as float)')
+                ->join('accounts', 'account_id', 'accounts.id')
+                ->whereColumn([
+                    [DB::raw('year(date_purchase)'), DB::raw($value->year)],
+                    ['accounts.badge_id', 'heritages.badge_id']
+                ])
+            ])
+            ->join('currencies', 'currencies.id', 'heritages.badge_id')
+            ->groupBy('year', 'currencies.code', 'heritages.badge_id')
+            ->get();
+        }
+
+        return response()->json($heritages);
     }
 
 }

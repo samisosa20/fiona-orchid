@@ -184,7 +184,7 @@ class AccountController extends Controller
         try {
             $account->delete();
             return response()->json([
-                'message' => 'Cuenta eliminada exitosamente',
+                'message' => 'Cuenta inactivada exitosamente',
                 'data' => $account,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
@@ -233,6 +233,34 @@ class AccountController extends Controller
             ])
             ->with(['account', 'category', 'event', 'transfer'])
             ->orderBy('date_purchase', 'desc')
+            ->get();
+            return response()->json($movements);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Error al conseguir los datos',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
+    
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function balances()
+    {
+        try {
+            $user = JWTAuth::user();
+            $movements = Account::where([
+                ['accounts.user_id', $user->id],
+            ])
+            ->selectRaw('cast(ifnull(sum(amount), 0) + sum(accounts.init_amount) as FLOAT) as balance, code as currency')
+            ->leftJoin('movements', 'accounts.id', 'account_id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->groupBy('currencies.code')
+            ->orderByRaw('cast(ifnull(sum(amount), 0) + sum(accounts.init_amount) as FLOAT) desc')
+            ->take(3)
             ->get();
             return response()->json($movements);
         } catch(\Illuminate\Database\QueryException $ex){
