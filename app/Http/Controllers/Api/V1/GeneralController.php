@@ -22,7 +22,8 @@ class GeneralController extends Controller
 
             return response()->json([
                 'currencies' => Currency::get(),
-                'groups' => Group::get()
+                'groups' => Group::where('id', '<>', env('GROUP_TRANSFER_ID'))
+                ->get()
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([

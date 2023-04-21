@@ -231,7 +231,7 @@ class AccountController extends Controller
                 ['account_id', $id],
                 ['user_id', $user->id],
             ])
-            ->with(['account', 'category', 'event', 'transfer'])
+            ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
             ->orderBy('date_purchase', 'desc')
             ->get();
             return response()->json($movements);

@@ -20,7 +20,7 @@ class MovementController extends Controller
     public function index()
     {
         $user = JWTAuth::user();
-        $movements = Movement::with(['account', 'category', 'event', 'transfer'])
+        $movements = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn'])
         ->where([
             ['user_id', $user->id]
         ])
@@ -98,7 +98,7 @@ class MovementController extends Controller
                     'category_id' => $request->input('category_id'),
                     'description' => $request->input('description'),
                     'amount' => $request->input('amount') * -1,
-                    'trm' => $request->input('trm') ?? 1,
+                    'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
                     'date_purchase' => $request->input('date_purchase'),
                     'user_id' => $user->id,
                 ]);
@@ -108,8 +108,8 @@ class MovementController extends Controller
                     'account_id' => $request->input('account_end_id'),
                     'category_id' => $request->input('category_id'),
                     'description' => $request->input('description'),
-                    'amount' => $request->input('amount'),
-                    'trm' => $request->input('trm') ?? 1,
+                    'amount' => $request->input('amount_end') ?? $request->input('amount'),
+                    'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
                     'date_purchase' => $request->input('date_purchase'),
                     'user_id' => $user->id,
                     'transfer_id' => $movement->id
@@ -132,12 +132,25 @@ class MovementController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Movement  $movement
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Movement $movement)
+    public function show($id)
     {
-        return response()->json($movement);
+        $user = JWTAuth::user();
+        $data = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn'])
+        ->where([
+            ['user_id', $user->id],
+            ['id', $id]
+        ])
+        ->first();
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
     }
 
     /**
@@ -210,7 +223,7 @@ class MovementController extends Controller
                         'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
                         'amount' => $request->input('amount') * -1,
-                        'trm' => $request->input('trm') ?? 1,
+                        'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $movement->fill($outData)->save();
@@ -219,8 +232,8 @@ class MovementController extends Controller
                         'account_id' => $request->input('account_end_id'),
                         'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount'),
-                        'trm' => $request->input('trm') ?? 1,
+                        'amount' => $request->input('amount_end'),
+                        'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $outMovement = Movement::where([
@@ -233,18 +246,18 @@ class MovementController extends Controller
                         'account_id' => $request->input('account_end_id'),
                         'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount'),
-                        'trm' => $request->input('trm') ?? 1,
+                        'amount' => $request->input('amount_end'),
+                        'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $movement->fill($outData)->save();
-
+                    
                     $inData = [
                         'account_id' => $request->input('account_id'),
                         'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
                         'amount' => $request->input('amount') * -1,
-                        'trm' => $request->input('trm') ?? 1,
+                        'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $inMovement = Movement::where([

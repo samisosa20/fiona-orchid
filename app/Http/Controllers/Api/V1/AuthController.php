@@ -39,7 +39,14 @@ class AuthController extends Controller
             if (!$user = User::where([
                 ['email', $request->email],
                 ['password', Hash::make($request->input('password'))]
-            ])->first()) {
+            ])
+            ->addSelect([
+                'transfer_id' => \DB::table('categories')
+                ->select('id')
+                ->whereColumn('user_id', 'users.id')
+                ->where('group_id', '=', env('GROUP_TRANSFER_ID'))
+            ])
+            ->first()) {
                 return response()->json([
                     'message' => 'Usuario o contraseña incorrecta'
                 ], 401);
@@ -50,7 +57,8 @@ class AuthController extends Controller
             return response()->json([
                 'data' => [
                     'name' => $user->name,
-                    'email' => $user->email
+                    'email' => $user->email,
+                    'transfer_id' => $user->transfer_id
                 ],
                 'token' => $token
             ]);

@@ -26,7 +26,7 @@ return new class extends Migration
             ->onUpdate('cascade');
             $table->string('description')->nullable();
             $table->decimal('amount', $precision = 15, $scale = 2);
-            $table->decimal('trm', $precision = 15, $scale = 2)->default(1);
+            $table->decimal('trm', $precision = 15, $scale = 5)->default(1);
             $table->dateTime('date_purchase');
             $table->unsignedBigInteger('transfer_id')->nullable();
             $table->foreign('transfer_id')

@@ -72,9 +72,14 @@ class Movement extends Model
         return $this->hasOne(Account::class, 'id', 'account_id');
     }
     
-    public function transfer()
+    public function transferOut()
     {
-        return $this->hasOne(Movement::class, 'id', 'transfer_id');
+        return $this->hasOne(Movement::class, 'id', 'transfer_id')->with('account');
+    }
+
+    public function transferIn()
+    {
+        return $this->hasOne(Movement::class, 'transfer_id', 'id')->with('account');
     }
     
     public function event()

@@ -23,6 +23,10 @@ class PaymentController extends Controller
         $payments = PlannedPayment::where([
             ['user_id', $user->id]
         ])
+        ->with('category')
+        ->with(['account' => function ($query) {
+            $query->with('currency');
+        }])
         ->get();
 
         return response()->json($payments);
@@ -92,12 +96,28 @@ class PaymentController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\PlannedPayment  $payment
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(PlannedPayment $payment)
+    public function show($id)
     {
-        return response()->json($payment);
+        $user = JWTAuth::user();
+        $data = PlannedPayment::with('category')
+        ->with(['account' => function ($query) {
+            $query->with('currency');
+        }])
+        ->where([
+            ['user_id', $user->id],
+            ['id', $id]
+        ])
+        ->first();
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
     }
 
     /**
