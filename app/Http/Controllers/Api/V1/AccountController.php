@@ -272,7 +272,15 @@ class AccountController extends Controller
         try {
             $user = JWTAuth::user();
             $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_month_year');
-            return response()->json($movements);
+            $balance_total = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
+
+            $balance_adjust = $balance_total = array_map(function($element) {
+                $element->type = "total";
+                return $element;
+              }, $balance_total);
+            
+
+            return response()->json(array_merge($movements, $balance_adjust));
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' =>  'Error al conseguir los datos',
