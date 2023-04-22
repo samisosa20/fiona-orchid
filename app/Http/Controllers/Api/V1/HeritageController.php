@@ -201,7 +201,7 @@ class HeritageController extends Controller
         ])
         ->distinct('year')
         ->select('year')
-        ->orderBy('year', 'desc')
+        ->orderBy('year')
         ->get();
         foreach ($heritages as &$value) {
             $value->balance = Heritage::where([
