@@ -252,16 +252,26 @@ class AccountController extends Controller
     {
         try {
             $user = JWTAuth::user();
-            $movements = Account::where([
-                ['accounts.user_id', $user->id],
-            ])
-            ->selectRaw('cast(ifnull(sum(amount), 0) + sum(accounts.init_amount) as FLOAT) as balance, code as currency')
-            ->leftJoin('movements', 'accounts.id', 'account_id')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->groupBy('currencies.code')
-            ->orderByRaw('cast(ifnull(sum(amount), 0) + sum(accounts.init_amount) as FLOAT) desc')
-            ->take(3)
-            ->get();
+            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
+            return response()->json($movements);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Error al conseguir los datos',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
+    
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function balancesMonthYear()
+    {
+        try {
+            $user = JWTAuth::user();
+            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_month_year');
             return response()->json($movements);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([

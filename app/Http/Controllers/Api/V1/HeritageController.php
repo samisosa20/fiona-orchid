@@ -28,6 +28,7 @@ class HeritageController extends Controller
         ->when($request->query('year'), function ($query) use ($request) {
             $query->where('year', $request->query('year'));
         })
+        ->orderBy('year', 'desc')
         ->get();
 
         return response()->json($heritages);
