@@ -10,6 +10,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\DB;
  
 use App\Models\Heritage;
+use App\Models\Movement;
 
 class HeritageController extends Controller
 {
@@ -204,22 +205,28 @@ class HeritageController extends Controller
         ->orderBy('year')
         ->get();
         foreach ($heritages as &$value) {
-            $value->balance = Heritage::where([
-                ['user_id', $user->id],
-                ['year', $value->year]
+            $value->balance = Movement:: where([
+                ['movements.user_id', $user->id],
             ])
-            ->selectRaw('currencies.code as currency, cast(sum(comercial_amount) as float) as comercial_amount, cast(sum(legal_amount) as float) as legal_amount')
+            ->whereYear('date_purchase', '=', $value->year)
+            ->selectRaw('year(date_purchase) as year, currencies.code as currency, cast(ifnull(sum(amount), 0) as float) as movements')
             ->addSelect([
-                'movements' => DB::table('movements')
-                ->selectRaw('cast(ifnull(sum(amount), 0) as float)')
-                ->join('accounts', 'account_id', 'accounts.id')
+                'comercial_amount' => DB::table('heritages')
+                ->selectRaw('cast(sum(comercial_amount) as float)')
+                ->whereColumn([
+                    [DB::raw('year(date_purchase)'), DB::raw($value->year)],
+                    ['accounts.badge_id', 'heritages.badge_id']
+                ]),
+                'legal_amount' => DB::table('heritages')
+                ->selectRaw('cast(sum(legal_amount) as float)')
                 ->whereColumn([
                     [DB::raw('year(date_purchase)'), DB::raw($value->year)],
                     ['accounts.badge_id', 'heritages.badge_id']
                 ])
             ])
-            ->join('currencies', 'currencies.id', 'heritages.badge_id')
-            ->groupBy('year', 'currencies.code', 'heritages.badge_id')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->join('currencies', 'currencies.id', 'accounts.badge_id')
+            ->groupByRaw('year(date_purchase), currencies.code')
             ->get();
         }
 
