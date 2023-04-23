@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\HeritageController;
 use App\Http\Controllers\Api\V1\BudgetController;
 use App\Http\Controllers\Api\V1\GeneralController;
+use App\Http\Controllers\Api\V1\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +50,8 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     Route::get('/consolidate/heritages', [HeritageController::class, 'consolidate']);
     
     Route::apiResource('/budgets', BudgetController::class);
+
+    Route::get('/resports', [ReportController::class, 'report']);
 
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
