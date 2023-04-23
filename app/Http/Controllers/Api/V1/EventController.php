@@ -103,7 +103,6 @@ class EventController extends Controller
             'message' =>  'Datos no encontrados',
             'detail' => 'La información no existe'
         ], 400);
-        return response()->json($event);
     }
 
     /**

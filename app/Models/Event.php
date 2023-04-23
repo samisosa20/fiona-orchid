@@ -50,7 +50,7 @@ class Event extends Model
     
     public function movements()
     {
-        return $this->hasMany(Movement::class, 'event_id', 'id')->with(['account', 'category', 'event', 'transfer']);
+        return $this->hasMany(Movement::class, 'event_id', 'id')->with(['account', 'category', 'event', 'transferIn', 'transferOut']);
     }
     
     public function scopeWithBalance($query)
