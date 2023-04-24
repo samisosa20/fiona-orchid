@@ -21,7 +21,7 @@ class ReportController extends Controller
 
             $close_open = Movement::where([
                 ['movements.user_id', $user->id],
-                //['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -39,7 +39,7 @@ class ReportController extends Controller
                 $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
                 ->where([
                     ['movements.user_id', $user->id],
-                    //['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                    ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
                     ['currencies.code', $value->currency],
                 ])
                 ->whereDate('date_purchase', '<', $init_date)
@@ -52,6 +52,7 @@ class ReportController extends Controller
                     ['user_id', $user->id],
                     ['currencies.code', $value->currency],
                 ])
+                ->withTrashed()
                 ->whereDate('accounts.created_at', '<', $init_date)
                 ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
                 ->join('currencies', 'badge_id', 'currencies.id')
@@ -72,7 +73,21 @@ class ReportController extends Controller
                 $value->utility = $value->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount;
             }
 
-            return response()->json($close_open);
+            $incomes = Movement::where([
+                ['movements.user_id', $user->id],
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('categories.name as currency,
+            cast(ifnull(sum(if(amount > 0 , amount, 0)), 0) as float) as income')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->groupBy('currencies.code')
+            ->get();
+
+            return response()->json([
+                'open_close' => $close_open
+            ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' => 'Datos no obtenidos',
