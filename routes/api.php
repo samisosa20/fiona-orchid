@@ -51,7 +51,7 @@ Route::middleware(['jwt', 'verified'])->prefix('v1')->group(function () {
     
     Route::apiResource('/budgets', BudgetController::class);
 
-    Route::get('/resports', [ReportController::class, 'report']);
+    Route::get('/reports', [ReportController::class, 'report']);
 
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);

@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 use App\Models\Movement;
 use App\Models\Account;
+use App\Models\Category;
 
 class ReportController extends Controller
 {
@@ -75,18 +76,49 @@ class ReportController extends Controller
 
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
-                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['amount', '>', 0]
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('categories.name as currency,
-            cast(ifnull(sum(if(amount > 0 , amount, 0)), 0) as float) as income')
+            ->selectRaw('categories.name as category, currencies.code as currency,
+            cast(ifnull(sum(amount), 0) as float) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
-            ->groupBy('currencies.code')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->groupBy('categories.name', 'currencies.code')
+            ->orderByRaw('currencies.code, ifnull(sum(amount), 0) desc')
+            ->get();
+            
+            $expensives = Movement::where([
+                ['movements.user_id', $user->id],
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['amount', '<', 0]
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('categories.name as category, currencies.code as currency,
+            cast(ifnull(sum(amount), 0) as float) as amount')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->groupBy('categories.name', 'currencies.code')
+            ->orderByRaw('currencies.code, ifnull(sum(amount), 0)')
+            ->get();
+
+            $main_expensive = Category::where([
+                ['user_id', $user->id],
+                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+            ])
+            ->whereNull('category_id')
             ->get();
 
             return response()->json([
-                'open_close' => $close_open
+                'open_close' => $close_open,
+                'incomes' => $incomes,
+                'main_expensive' => $main_expensive,
+                'list_expensives' => $expensives,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
