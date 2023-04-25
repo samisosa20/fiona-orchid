@@ -93,7 +93,6 @@ class ReportController extends Controller
             $expensives = Movement::where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
                 ['amount', '<', 0]
             ])
             ->whereDate('date_purchase', '>=', $init_date)
@@ -107,17 +106,47 @@ class ReportController extends Controller
             ->orderByRaw('currencies.code, ifnull(sum(amount), 0)')
             ->get();
 
-            $main_expensive = Category::where([
-                ['user_id', $user->id],
-                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+            $main_expensive = \DB::table('categories as a')
+            ->where([
+                ['a.user_id', $user->id],
+                ['a.group_id', '>', 2],
             ])
-            ->whereNull('category_id')
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(round(abs(sum(amount))) as float) as amount, currencies.code as currency')
+            ->leftJoin('categories as b', 'a.category_id', 'b.id')
+            ->join('movements', 'a.id', 'movements.category_id')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->join('currencies', 'currencies.id', 'accounts.badge_id')
+            ->groupByRaw('if(a.category_id is null, a.name, b.name), currencies.code')
+            ->orderBy('currencies.code')
+            ->orderBy('amount', 'desc')
             ->get();
+            
+            $group_expensive = \DB::table('categories as a')
+            ->where([
+                ['a.user_id', $user->id],
+                ['a.group_id', '<>', env('GROUP_TRANSFER_ID')],
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('b.name, cast(round(sum(amount)) as float) as amount, currencies.code as currency')
+            ->join('groups as b', 'a.group_id', 'b.id')
+            ->join('movements', 'a.id', 'movements.category_id')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->join('currencies', 'currencies.id', 'accounts.badge_id')
+            ->groupByRaw('b.name, currencies.code')
+            ->orderBy('currencies.code')
+            ->orderBy('amount', 'desc')
+            ->get();
+
+            
 
             return response()->json([
                 'open_close' => $close_open,
                 'incomes' => $incomes,
                 'main_expensive' => $main_expensive,
+                'group_expensive' => $group_expensive,
                 'list_expensives' => $expensives,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
