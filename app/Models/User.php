@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+use App\Models\Currency;
+
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     use HasFactory, Notifiable;
@@ -33,6 +35,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
+        'badge_id',
     ];
 
     /**
@@ -55,4 +58,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
+
+    public function currency()
+    {
+        return $this->hasOne(Currency::class, 'id', 'badge_id');
+    }
+
 }
