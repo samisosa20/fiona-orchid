@@ -200,9 +200,6 @@ class EventController extends Controller
         }]) */
         ->whereDate('end_event', '>=', now())
         ->get();
-        foreach ($events as &$value) {
-            $value->balance = $user->balance * 1;
-        }
 
         return response()->json($events);
     }

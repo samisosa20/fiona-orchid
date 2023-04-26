@@ -222,14 +222,14 @@ class HeritageController extends Controller
                     ['year', $value->year],
                     ['badge_id', $balance->badge_id],
                 ])
-                ->selectRaw('cast(ifnull(sum(comercial_amount), 0) as decimal(15, 2)) as comercial_amount')
+                ->selectRaw('cast(ifnull(sum(comercial_amount), 0) as float) as comercial_amount')
                 ->first();
                 $legal_amount = Heritage::where([
                     ['user_id', $user->id],
                     ['year', $value->year],
                     ['badge_id', $balance->badge_id],
                 ])
-                ->selectRaw('cast(ifnull(sum(legal_amount), 0) as decimal(15, 2)) as legal_amount')
+                ->selectRaw('cast(ifnull(sum(legal_amount), 0) as float) as legal_amount')
                 ->first();
                 $balance->comercial_amount = $comercial_amount->comercial_amount;
                 $balance->legal_amount = $legal_amount->legal_amount;

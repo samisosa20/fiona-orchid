@@ -29,15 +29,17 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('cast(ifnull(sum(if(amount > 0 , amount, 0)), 0) as decimal(15, 2)) as income,
-            cast(ifnull(sum(if(amount < 0 , amount, 0)), 0) as decimal(15, 2)) as expensive,
-            cast(ifnull(sum(amount), 0) as decimal(15, 2)) as utility')
+            ->selectRaw('cast(ifnull(sum(if(amount > 0 , amount, 0)), 0) as float) as income,
+            cast(ifnull(sum(if(amount < 0 , amount, 0)), 0) as float) as expensive,
+            cast(ifnull(sum(amount), 0) as float) as utility')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
-            $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as decimal(15, 2)) as amount')
+            $close_open = $close_open->expensive * 1;
+
+            $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
             ->where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
@@ -55,7 +57,7 @@ class ReportController extends Controller
             ])
             ->withTrashed()
             ->whereDate('accounts.created_at', '<', $init_date)
-            ->selectRaw('cast(ifnull(sum(init_amount), 0) as decimal(15, 2)) as amount')
+            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->first();
             
@@ -65,7 +67,7 @@ class ReportController extends Controller
             ])
             ->whereDate('accounts.created_at', '>=', $init_date)
             ->whereDate('accounts.created_at', '<=', $end_date)
-            ->selectRaw('cast(ifnull(sum(init_amount), 0) as decimal(15, 2)) as amount')
+            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->first();
 
@@ -82,7 +84,7 @@ class ReportController extends Controller
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->selectRaw('categories.name as category,
-            cast(ifnull(sum(amount), 0) as decimal(15, 2)) as amount')
+            cast(ifnull(sum(amount), 0) as float) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
@@ -99,7 +101,7 @@ class ReportController extends Controller
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->selectRaw('categories.name as category,
-            cast(ifnull(sum(amount), 0) as decimal(15, 2)) as amount')
+            cast(ifnull(sum(amount), 0) as float) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
@@ -115,7 +117,7 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(round(abs(sum(amount))) as decimal(15, 2)) as amount')
+            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(round(abs(sum(amount))) as float) as amount')
             ->leftJoin('categories as b', 'a.category_id', 'b.id')
             ->join('movements', 'a.id', 'movements.category_id')
             ->join('accounts', 'accounts.id', 'movements.account_id')
@@ -132,7 +134,7 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('b.name, cast(round(sum(amount)) as decimal(15, 2)) as amount')
+            ->selectRaw('b.name, cast(round(sum(amount)) as float) as amount')
             ->join('groups as b', 'a.group_id', 'b.id')
             ->join('movements', 'a.id', 'movements.category_id')
             ->join('accounts', 'accounts.id', 'movements.account_id')
@@ -141,8 +143,8 @@ class ReportController extends Controller
             ->orderBy('amount', 'desc')
             ->get();
 
+            $saving = 0;
             foreach ($group_expensive as &$value) {
-                $saving = 0;
                 if($value->name === 'Ingresos') {
                     $income = $value->amount;
                     $saving = $value->amount;
@@ -163,9 +165,9 @@ class ReportController extends Controller
             $end = Carbon::parse($end_date);
 
             if($init->diffInDays($end) < 90) {
-                $balance = \DB::select('select date, cast(amount as decimal(15, 2)) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
+                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
             } else {
-                $balance = \DB::select('select date, cast(amount as decimal(15, 2)) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_global_balance');
+                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_global_balance');
             }
 
 
