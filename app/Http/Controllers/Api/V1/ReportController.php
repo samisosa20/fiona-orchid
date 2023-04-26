@@ -34,45 +34,43 @@ class ReportController extends Controller
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->join('categories', 'movements.category_id', 'categories.id')
-            ->get();
+            ->first();
 
-            foreach ($close_open as &$value) {
-                $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
-                ->where([
-                    ['movements.user_id', $user->id],
-                    ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                    ['currencies.id', $currency],
-                ])
-                ->whereDate('date_purchase', '<', $init_date)
-                ->join('accounts', 'account_id', 'accounts.id')
-                ->join('currencies', 'badge_id', 'currencies.id')
-                ->join('categories', 'movements.category_id', 'categories.id')
-                ->first();
+            $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
+            ->where([
+                ['movements.user_id', $user->id],
+                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['currencies.id', $currency],
+            ])
+            ->whereDate('date_purchase', '<', $init_date)
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->first();
 
-                $open_init_amount = Account::where([
-                    ['user_id', $user->id],
-                    ['currencies.id', $currency],
-                ])
-                ->withTrashed()
-                ->whereDate('accounts.created_at', '<', $init_date)
-                ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
-                ->join('currencies', 'badge_id', 'currencies.id')
-                ->first();
-                
-                $income_init_amount = Account::where([
-                    ['user_id', $user->id],
-                    ['currencies.id', $currency],
-                ])
-                ->whereDate('accounts.created_at', '>=', $init_date)
-                ->whereDate('accounts.created_at', '<=', $end_date)
-                ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
-                ->join('currencies', 'badge_id', 'currencies.id')
-                ->first();
+            $open_init_amount = Account::where([
+                ['user_id', $user->id],
+                ['currencies.id', $currency],
+            ])
+            ->withTrashed()
+            ->whereDate('accounts.created_at', '<', $init_date)
+            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->first();
+            
+            $income_init_amount = Account::where([
+                ['user_id', $user->id],
+                ['currencies.id', $currency],
+            ])
+            ->whereDate('accounts.created_at', '>=', $init_date)
+            ->whereDate('accounts.created_at', '<=', $end_date)
+            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->first();
 
-                $value->open_balance = $open_balance->amount + $open_init_amount->amount;
-                $value->income = $value->income + $income_init_amount->amount;
-                $value->utility = $value->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount;
-            }
+            $close_open->open_balance = $open_balance->amount + $open_init_amount->amount;
+            $close_open->income = $close_open->income + $income_init_amount->amount;
+            $close_open->utility = $close_open->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount;
 
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
