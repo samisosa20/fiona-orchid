@@ -140,7 +140,32 @@ class ReportController extends Controller
             ->orderBy('amount', 'desc')
             ->get();
 
+            foreach ($group_expensive as &$value) {
+                $saving = 0;
+                if($value->name === 'Ingresos') {
+                    $income = $value->amount;
+                    $saving = $value->amount;
+                } else {
+                    $value->porcent = round(abs($value->amount) / $income * 100, 2);
+                    $saving += $value->amount;
+                }
+            }
+            $savingArray = [
+                "name" => "Ahorros",
+                "amount" => $saving < 0 ? 0 : $saving,
+                "porcent" => $saving < 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2)
+            ];
+
+            $group_expensive->push($savingArray);
+
             $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
+
+            $acumAux = 0;
+            foreach ($balance as $key => &$value) {
+                $prevAmount = $value->amount;
+                $value->amount += $acumAux;
+                $acumAux += $prevAmount;
+            }
 
             return response()->json([
                 'open_close' => $close_open,
