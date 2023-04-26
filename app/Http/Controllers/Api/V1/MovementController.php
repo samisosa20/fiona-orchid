@@ -289,6 +289,17 @@ class MovementController extends Controller
     public function destroy(Movement $movement)
     {
         try {
+            $user = JWTAuth::user();
+
+            if($movement->transfer_id){
+                // if is transfer and is in movevemt so delete out movement
+                Movement::find($movement->transfer_id)->delete();
+            } else if($movement->category_id === $user->transfer_id) {
+                // if is transfer and is out movevemt so delete in movement
+                Movement::where([
+                    ['transfer_id', $movement->id]
+                ])->delete();
+            }
             $movement->delete();
             return response()->json([
                 'message' => 'Movimiento eliminado exitosamente',
