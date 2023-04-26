@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('badge_id')->default(1);
+            $table->foreign('badge_id')
+            ->references('id')
+            ->on('currencies')
+            ->onUpdate('cascade');
             $table->rememberToken();
             $table->timestamps();
         });

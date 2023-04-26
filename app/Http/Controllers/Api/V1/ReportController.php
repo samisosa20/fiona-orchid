@@ -17,14 +17,14 @@ class ReportController extends Controller
         try{
             $user = JWTAuth::user();
 
-            $init_date = $request->query('init_date');
-            $end_date = $request->query('end_date');
-            $currency = $request->query('currency');
+            $init_date = $request->query('init_date') ?? now()->format("Y-m-d");
+            $end_date = $request->query('end_date') ?? now()->format("Y-m-d");
+            $currency = $request->query('currency') ?? $user->badge_id;
 
             $close_open = Movement::where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['currencies.code', $currency],
+                ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -41,7 +41,7 @@ class ReportController extends Controller
                 ->where([
                     ['movements.user_id', $user->id],
                     ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                    ['currencies.code', $currency],
+                    ['currencies.id', $currency],
                 ])
                 ->whereDate('date_purchase', '<', $init_date)
                 ->join('accounts', 'account_id', 'accounts.id')
@@ -51,7 +51,7 @@ class ReportController extends Controller
 
                 $open_init_amount = Account::where([
                     ['user_id', $user->id],
-                    ['currencies.code', $currency],
+                    ['currencies.id', $currency],
                 ])
                 ->withTrashed()
                 ->whereDate('accounts.created_at', '<', $init_date)
@@ -61,7 +61,7 @@ class ReportController extends Controller
                 
                 $income_init_amount = Account::where([
                     ['user_id', $user->id],
-                    ['currencies.code', $currency],
+                    ['currencies.id', $currency],
                 ])
                 ->whereDate('accounts.created_at', '>=', $init_date)
                 ->whereDate('accounts.created_at', '<=', $end_date)
@@ -78,7 +78,7 @@ class ReportController extends Controller
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
                 ['amount', '>', 0],
-                ['currencies.code', $currency],
+                ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -95,7 +95,7 @@ class ReportController extends Controller
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
                 ['amount', '<', 0],
-                ['currencies.code', $currency],
+                ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -112,7 +112,7 @@ class ReportController extends Controller
             ->where([
                 ['a.user_id', $user->id],
                 ['a.group_id', '>', 2],
-                ['currencies.code', $currency],
+                ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -129,7 +129,7 @@ class ReportController extends Controller
             ->where([
                 ['a.user_id', $user->id],
                 ['a.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['currencies.code', $currency],
+                ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
@@ -142,7 +142,7 @@ class ReportController extends Controller
             ->orderBy('amount', 'desc')
             ->get();
 
-            $balance = \DB::select('select * from (SELECT @user_id := '.$user->id.' i, @init_date := "'.$init_date.'" in, @end_date := "'.$end_date.'" en, @currency := "'.$currency.'" cu) alias, report_balance');;
+            $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
 
             return response()->json([
                 'open_close' => $close_open,

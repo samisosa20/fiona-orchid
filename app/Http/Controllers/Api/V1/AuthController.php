@@ -58,7 +58,8 @@ class AuthController extends Controller
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'transfer_id' => $user->transfer_id
+                    'transfer_id' => $user->transfer_id,
+                    'currency' => $user->badge_id,
                 ],
                 'token' => $token
             ]);

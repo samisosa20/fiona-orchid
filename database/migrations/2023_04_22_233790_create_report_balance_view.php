@@ -35,12 +35,35 @@ return new class extends Migration
     {
         return "
             CREATE VIEW report_balance AS
-            select DATE_FORMAT(time_dimension.db_date, \"%m-%d\") as date, round(ifnull(sum(amount),0), 2) as amount from time_dimension
-            left join movements on (time_dimension.db_date = date(date_purchase) and user_id = user_id())
-            left join accounts on accounts.id = movements.account_id
-            left join currencies on currencies.id = accounts.badge_id and currencies.code = currency()
-            where date(time_dimension.db_date) >= init_date() and date(time_dimension.db_date) <= end_date()
-            GROUP by DATE_FORMAT(time_dimension.db_date, \"%m-%d\")
+            WITH getValueByDate AS (
+                select DATE_FORMAT(date_purchase, \"%b-%d\") as date, round(ifnull(sum(amount),0), 2) as amount from movements
+                join accounts on accounts.id = movements.account_id
+                join currencies on currencies.id = accounts.badge_id and currencies.id = currency()
+                join categories on movements.category_id = categories.id
+                join groups on categories.group_id = groups.id and groups.id <> group_id()
+                where date(date_purchase) >= init_date() and date(date_purchase) <= end_date() and movements.user_id = user_id()
+                GROUP by DATE_FORMAT(date_purchase, \"%b-%d\")
+            ), getinitValue AS (
+                SELECT DATE_FORMAT(init_date(), \"%b-%d\") as date, SUM(IFNULL(amount, 0)) AS open_amount FROM movements
+                join accounts on (accounts.id = movements.account_id)
+                join currencies on (accounts.badge_id = currencies.id)
+                join categories on movements.category_id = categories.id
+                join groups on categories.group_id = groups.id and groups.id <> group_id()
+                WHERE movements.user_id = user_id() and date(date_purchase) < init_date() and currencies.id = currency()
+            ), init_money AS (
+                SELECT DATE_FORMAT(init_date(), \"%b-%d\") as date, SUM(IFNULL(init_amount, 0)) AS init_amount FROM accounts
+                join currencies on (accounts.badge_id = currencies.id)
+                WHERE accounts.user_id = user_id() and date(accounts.created_at) < init_date() and currencies.id = currency()
+            ), getDate AS (
+                SELECT DATE_FORMAT(db_date, '%b-%d') AS date, day, month FROM time_dimension WHERE db_date BETWEEN init_date() and end_date()
+            ),getAcumValue AS (
+                SELECT d.date, ifnull(amount,0) + ifnull(open_amount, 0) + ifnull(init_amount, 0) as amount
+                FROM getDate d
+                left join getValueByDate a on (a.date = d.date)
+                LEFT JOIN getinitValue b on (d.date = b.date)
+                LEFT JOIN init_money c on (d.date = c.date)
+            )
+            SELECT * FROM getAcumValue
             ";
     }
    
