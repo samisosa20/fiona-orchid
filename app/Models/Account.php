@@ -63,7 +63,7 @@ class Account extends Model
     public function scopeWithBalance($query)
     {
         $query->addSelect([
-            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as double)')
             ->whereColumn('movements.account_id', 'accounts.id')
         ]);
     }
@@ -71,7 +71,7 @@ class Account extends Model
     public function scopeWithIncomeExpensiveWithoutTransf($query)
     {
         $query->addSelect([
-            'incomes' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            'incomes' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as double)')
             ->whereColumn('movements.account_id', 'accounts.id')
             ->whereHas('category', function ($query){
                 $query->where([
@@ -81,7 +81,7 @@ class Account extends Model
             ->where([
                 ['amount', '>', 0]
             ]),
-            'expensives' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            'expensives' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as double)')
             ->whereColumn('movements.account_id', 'accounts.id')
             ->whereHas('category', function ($query){
                 $query->where([

@@ -36,7 +36,7 @@ return new class extends Migration
         return "
             CREATE VIEW general_month_year AS
             with get_amount_month as (
-                SELECT code , if(month(a.created_at) = month(now()) and year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as FLOAT) from movements where account_id = a.id and month(date_purchase) = month(now()) and year(date_purchase) = year(now())) as balance from accounts a
+                SELECT code , if(month(a.created_at) = month(now()) and year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as decimal) from movements where account_id = a.id and month(date_purchase) = month(now()) and year(date_purchase) = year(now())) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
                 where a.user_id = user_id()
             ), sum_amount_month as (
@@ -44,7 +44,7 @@ return new class extends Migration
                 group by code
                 order by sum(init_amount + balance) desc
             ), get_amount_year as (
-                SELECT code , if(year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as FLOAT) from movements where account_id = a.id and year(date_purchase) = year(now())) as balance from accounts a
+                SELECT code , if(year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as decimal) from movements where account_id = a.id and year(date_purchase) = year(now())) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
                 where a.user_id = user_id()
             ), sum_amount_year as (
