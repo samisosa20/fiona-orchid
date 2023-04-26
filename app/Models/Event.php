@@ -56,7 +56,7 @@ class Event extends Model
     public function scopeWithBalance($query)
     {
         $query->addSelect([
-            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as FLOAT)')
+            'balance' => Movement::selectRaw('cast(ifnull(sum(amount), 0) as decimal(15, 2))')
             ->whereColumn('movements.event_id', 'events.id')
         ]);
     }
