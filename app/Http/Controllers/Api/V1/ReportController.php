@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Carbon\Carbon;
 
 use App\Models\Movement;
 use App\Models\Account;
@@ -158,7 +159,15 @@ class ReportController extends Controller
 
             $group_expensive->push($savingArray);
 
-            $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
+            $init = Carbon::parse($init_date);
+            $end = Carbon::parse($end_date);
+
+            if($init->diffInDays($end) < 90) {
+                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
+            } else {
+                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_global_balance');
+            }
+
 
             $acumAux = 0;
             foreach ($balance as $key => &$value) {
