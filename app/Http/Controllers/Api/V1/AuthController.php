@@ -49,7 +49,7 @@ class AuthController extends Controller
             ->first()) {
                 return response()->json([
                     'message' => 'Usuario o contraseña incorrecta'
-                ], 401);
+                ], 400);
             }
 
             $token = JWTAuth::fromUser($user);
