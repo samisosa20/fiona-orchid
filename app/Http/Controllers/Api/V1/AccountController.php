@@ -100,14 +100,93 @@ class AccountController extends Controller
         $user = JWTAuth::user();
         $data = Account::withTrashed()
         ->with(['currency'])
-        ->withBalance()
-        ->withIncomeExpensiveWithoutTransf()
         ->where([
             ['user_id', $user->id],
             ['id', $id]
         ])
         ->first();
         if($data) {
+            $month_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['trm', '<>', 1],
+                ['account_id', $id]
+            ])
+            ->whereRaw('month(date_purchase) = month(now()) and year(date_purchase) = year(now())')
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->first();
+            
+            $month_balance = Movement::where([
+                ['movements.user_id', $user->id],
+                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['account_id', $id]
+            ])
+            ->whereRaw('month(date_purchase) = month(now()) and year(date_purchase) = year(now())')
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->first();
+
+            $year_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['trm', '<>', 1],
+                ['account_id', $id]
+            ])
+            ->whereRaw('year(date_purchase) = year(now())')
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->first();
+            
+            $year_balance = Movement::where([
+                ['movements.user_id', $user->id],
+                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['account_id', $id]
+            ])
+            ->whereRaw('year(date_purchase) = year(now())')
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->first();
+            
+            $total_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['trm', '<>', 1],
+                ['account_id', $id]
+            ])
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->first();
+            
+            $total_balance = Movement::where([
+                ['movements.user_id', $user->id],
+                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['account_id', $id]
+            ])
+            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->first();
+
+            $month = [
+                'type' => 'month',
+                'incomes' => $month_transfer->incomes + $month_balance->incomes,
+                'expensives' => $month_transfer->expensives + $month_balance->expensives,
+            ];
+
+            $year = [
+                'type' => 'year',
+                'incomes' => $year_transfer->incomes + $year_balance->incomes,
+                'expensives' => $year_transfer->expensives + $year_balance->expensives,
+            ];
+            $total = [
+                'type' => 'total',
+                'incomes' => $total_transfer->incomes + $total_balance->incomes,
+                'expensives' => $total_transfer->expensives + $total_balance->expensives,
+            ];
+
+            $data->month = $month;
+            $data->year = $year;
+            $data->total = $total;
             return response()->json($data);
         }
         return response([
