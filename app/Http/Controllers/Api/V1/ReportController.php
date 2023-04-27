@@ -37,8 +37,6 @@ class ReportController extends Controller
             ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
-            $close_open = $close_open->expensive * 1;
-
             $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
             ->where([
                 ['movements.user_id', $user->id],
