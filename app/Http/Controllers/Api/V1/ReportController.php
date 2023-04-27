@@ -156,7 +156,7 @@ class ReportController extends Controller
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->selectRaw('categories.name as category,
-            ifnull(sum(amount), 0)as amount')
+            abs(ifnull(sum(amount), 0)) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
