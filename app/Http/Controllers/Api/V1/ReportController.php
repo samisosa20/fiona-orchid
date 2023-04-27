@@ -22,6 +22,7 @@ class ReportController extends Controller
             $end_date = $request->query('end_date') ?? now()->format("Y-m-d");
             $currency = $request->query('currency') ?? $user->badge_id;
 
+            // get balance without transferns
             $close_open = Movement::where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
@@ -29,15 +30,15 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('cast(ifnull(sum(if(amount > 0 , amount, 0)), 0) as float) as income,
-            cast(ifnull(sum(if(amount < 0 , amount, 0)), 0) as float) as expensive,
-            cast(ifnull(sum(amount), 0) as float) as utility')
+            ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
+            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
+            ifnull(sum(amount), 0) as utility')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
-            $open_balance = Movement::selectRaw('cast(ifnull(sum(amount), 0) as float) as amount')
+            $open_balance = Movement::selectRaw('ifnull(sum(amount), 0) as amount')
             ->where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
@@ -55,7 +56,7 @@ class ReportController extends Controller
             ])
             ->withTrashed()
             ->whereDate('accounts.created_at', '<', $init_date)
-            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
+            ->selectRaw('ifnull(sum(init_amount), 0) as amount')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->first();
             
@@ -65,13 +66,31 @@ class ReportController extends Controller
             ])
             ->whereDate('accounts.created_at', '>=', $init_date)
             ->whereDate('accounts.created_at', '<=', $end_date)
-            ->selectRaw('cast(ifnull(sum(init_amount), 0) as float) as amount')
+            ->selectRaw('ifnull(sum(init_amount), 0) as amount')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->first();
 
+            //get transfer blanaces
+
+            $close_open_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['movements.trm', '<>', 1],
+                ['currencies.id', $currency],
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
+            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
+            ifnull(sum(amount), 0) as utility')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->first();
+
             $close_open->open_balance = $open_balance->amount + $open_init_amount->amount;
-            $close_open->income = $close_open->income + $income_init_amount->amount;
-            $close_open->utility = $close_open->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount;
+            $close_open->income = $close_open->income + $income_init_amount->amount + $close_open_transfer->income;
+            $close_open->expensive = $close_open->expensive + $close_open_transfer->expensive;
+            $close_open->utility = $close_open->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount + $close_open_transfer->utility;
 
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
