@@ -38,7 +38,7 @@ return new class extends Migration
             with get_amount_month as (
                 SELECT code , if(month(a.created_at) = month(now()) and year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as float) from movements where account_id = a.id and month(date_purchase) = month(now()) and year(date_purchase) = year(now())) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
-                where a.user_id = user_id()
+                where a.user_id = user_id() and a.deleted_at is null
             ), sum_amount_month as (
                 select 'month' as type, code as currency, sum(init_amount + balance) as balance from get_amount_month 
                 group by code
@@ -46,7 +46,7 @@ return new class extends Migration
             ), get_amount_year as (
                 SELECT code , if(year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select cast(ifnull(sum(amount), 0) as float) from movements where account_id = a.id and year(date_purchase) = year(now())) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
-                where a.user_id = user_id()
+                where a.user_id = user_id() and a.deleted_at is null
             ), sum_amount_year as (
                 select 'year' as type, code as currency, sum(init_amount + balance) as balance from get_amount_year 
                 group by code

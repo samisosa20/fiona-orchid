@@ -41,20 +41,18 @@ class ReportController extends Controller
             $open_balance = Movement::selectRaw('ifnull(sum(amount), 0) as amount')
             ->where([
                 ['movements.user_id', $user->id],
-                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
                 ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '<', $init_date)
+            ->whereNull('accounts.deleted_at')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
             $open_init_amount = Account::where([
                 ['user_id', $user->id],
                 ['currencies.id', $currency],
             ])
-            ->withTrashed()
             ->whereDate('accounts.created_at', '<', $init_date)
             ->selectRaw('ifnull(sum(init_amount), 0) as amount')
             ->join('currencies', 'badge_id', 'currencies.id')
@@ -83,7 +81,6 @@ class ReportController extends Controller
             ifnull(sum(amount), 0) as utility')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
             $close_open->open_balance = $open_balance->amount + $open_init_amount->amount;
@@ -293,7 +290,7 @@ class ReportController extends Controller
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' => 'Datos no obtenidos',
-                'detail' => $ex->errorInfo[0]
+                'detail' => $ex//->errorInfo[0]
             ], 400);
         }
     }
