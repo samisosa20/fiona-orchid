@@ -71,7 +71,6 @@ class ReportController extends Controller
             ->first();
 
             //get transfer blanaces
-
             $close_open_transfer = Movement::where([
                 ['movements.user_id', $user->id],
                 ['movements.trm', '<>', 1],
@@ -101,13 +100,35 @@ class ReportController extends Controller
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->selectRaw('categories.name as category,
-            cast(ifnull(sum(amount), 0) as float) as amount')
+            ifnull(sum(amount), 0) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->groupBy('categories.name')
             ->orderByRaw('ifnull(sum(amount), 0) desc')
             ->get();
+
+            // income by transfer diferent currency
+            $incomes_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['movements.trm', '<>', 1],
+                ['amount', '>', 0],
+                ['currencies.id', $currency],
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('categories.name as category,
+            ifnull(sum(amount), 0) as amount')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->groupBy('categories.name')
+            ->orderByRaw('ifnull(sum(amount), 0) desc')
+            ->first();
+
+            if($incomes_transfer){
+                $incomes->push($incomes_transfer);
+            }
             
             $expensives = Movement::where([
                 ['movements.user_id', $user->id],
@@ -118,13 +139,30 @@ class ReportController extends Controller
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->selectRaw('categories.name as category,
-            cast(ifnull(sum(amount), 0) as float) as amount')
+            ifnull(sum(amount), 0)as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->groupBy('categories.name')
             ->orderByRaw('ifnull(sum(amount), 0)')
             ->get();
+            
+            $expensives_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['movements.trm', '<>', 1],
+                ['amount', '<', 0],
+                ['currencies.id', $currency],
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('categories.name as category,
+            ifnull(sum(amount), 0)as amount')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->groupBy('categories.name')
+            ->orderByRaw('ifnull(sum(amount), 0)')
+            ->first();
 
             $main_expensive = \DB::table('categories as a')
             ->where([
@@ -134,7 +172,7 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(round(abs(sum(amount))) as float) as amount')
+            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(abs(sum(amount)) as double(15, 2)) as amount')
             ->leftJoin('categories as b', 'a.category_id', 'b.id')
             ->join('movements', 'a.id', 'movements.category_id')
             ->join('accounts', 'accounts.id', 'movements.account_id')
@@ -142,6 +180,10 @@ class ReportController extends Controller
             ->groupByRaw('if(a.category_id is null, a.name, b.name)')
             ->orderBy('amount', 'desc')
             ->get();
+
+            if($expensives_transfer){
+                $main_expensive->push($expensives_transfer);
+            }
             
             $group_expensive = \DB::table('categories as a')
             ->where([
@@ -161,19 +203,25 @@ class ReportController extends Controller
             ->get();
 
             $saving = 0;
+            $income = 0;
             foreach ($group_expensive as &$value) {
                 if($value->name === 'Ingresos') {
-                    $income = $value->amount;
-                    $saving = $value->amount;
+                    $income = $value->amount + $close_open_transfer->income;
+                    $saving = $value->amount + $close_open_transfer->income;
+                    $value->amount += $close_open_transfer->income;
                 } else {
+                    if($value->name === 'Gastos Fijos') {
+                        $value->amount += $close_open_transfer->expensive;
+                    }
                     $value->porcent = round(abs($value->amount) / $income * 100, 2);
                     $saving += $value->amount;
                 }
             }
+
             $savingArray = [
                 "name" => "Ahorros",
                 "amount" => $saving < 0 ? 0 : $saving,
-                "porcent" => $saving < 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2)
+                "porcent" => $saving < 0 || $income === 0 ? 0.00 : round(abs($saving) / $income * 100, 2)
             ];
 
             $group_expensive->push($savingArray);
