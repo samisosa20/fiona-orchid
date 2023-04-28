@@ -8,7 +8,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
 use App\Models\Movement;
-use App\Models\Account;
 use App\Models\Category;
 
 class ReportController extends Controller
@@ -22,71 +21,17 @@ class ReportController extends Controller
             $end_date = $request->query('end_date') ?? now()->format("Y-m-d");
             $currency = $request->query('currency') ?? $user->badge_id;
 
+
+            $category = Category::where([
+                ['user_id', $user->id],
+                ['group_id', '=', env('GROUP_TRANSFER_ID')],
+            ])
+            ->first();
+
             // get balance without transferns
-            $close_open = Movement::where([
-                ['movements.user_id', $user->id],
-                ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['currencies.id', $currency],
-            ])
-            ->whereDate('date_purchase', '>=', $init_date)
-            ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
-            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
-            ifnull(sum(amount), 0) as utility')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
-            ->first();
+            $close_open = \DB::select('select cast(open_balance as double(15,2)) as open_balance, cast(incomes as double(15,2)) as income, cast(expensives as double(15,2)) as expensive, cast(end_balance as double(15,2)) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
 
-            $open_balance = Movement::selectRaw('ifnull(sum(amount), 0) as amount')
-            ->where([
-                ['movements.user_id', $user->id],
-                ['currencies.id', $currency],
-            ])
-            ->whereDate('date_purchase', '<', $init_date)
-            ->whereNull('accounts.deleted_at')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->first();
 
-            $open_init_amount = Account::where([
-                ['user_id', $user->id],
-                ['currencies.id', $currency],
-            ])
-            ->whereDate('accounts.created_at', '<', $init_date)
-            ->selectRaw('ifnull(sum(init_amount), 0) as amount')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->first();
-            
-            $income_init_amount = Account::where([
-                ['user_id', $user->id],
-                ['currencies.id', $currency],
-            ])
-            ->whereDate('accounts.created_at', '>=', $init_date)
-            ->whereDate('accounts.created_at', '<=', $end_date)
-            ->selectRaw('ifnull(sum(init_amount), 0) as amount')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->first();
-
-            //get transfer blanaces
-            $close_open_transfer = Movement::where([
-                ['movements.user_id', $user->id],
-                ['movements.trm', '<>', 1],
-                ['currencies.id', $currency],
-            ])
-            ->whereDate('date_purchase', '>=', $init_date)
-            ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
-            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
-            ifnull(sum(amount), 0) as utility')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('currencies', 'badge_id', 'currencies.id')
-            ->first();
-
-            $close_open->open_balance = $open_balance->amount + $open_init_amount->amount;
-            $close_open->income = $close_open->income + $income_init_amount->amount + $close_open_transfer->income;
-            $close_open->expensive = $close_open->expensive + $close_open_transfer->expensive;
-            $close_open->utility = $close_open->utility + $income_init_amount->amount + $open_balance->amount + $open_init_amount->amount + $close_open_transfer->utility;
 
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
@@ -182,34 +127,49 @@ class ReportController extends Controller
                 $main_expensive->push($expensives_transfer);
             }
             
-            $group_expensive = \DB::table('categories as a')
+            $group_expensive = \DB::table('groups as a')
             ->where([
-                ['a.user_id', $user->id],
-                ['a.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['b.user_id', $user->id],
+                ['b.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['badge_id', $currency],
+            ])
+            ->whereDate('date_purchase', '>=', $init_date)
+            ->whereDate('date_purchase', '<=', $end_date)
+            ->selectRaw('a.name, ifnull(sum(amount), 0) as amount')
+            ->join('categories as b', 'b.group_id', 'a.id')
+            ->join('movements', 'b.id', 'movements.category_id')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->groupByRaw('a.name')
+            ->orderBy('amount', 'desc')
+            ->get();
+
+            //get transfer blanaces
+            $close_open_transfer = Movement::where([
+                ['movements.user_id', $user->id],
+                ['movements.trm', '<>', 1],
                 ['currencies.id', $currency],
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('b.name, cast(round(sum(amount)) as float) as amount')
-            ->join('groups as b', 'a.group_id', 'b.id')
-            ->join('movements', 'a.id', 'movements.category_id')
-            ->join('accounts', 'accounts.id', 'movements.account_id')
-            ->join('currencies', 'currencies.id', 'accounts.badge_id')
-            ->groupByRaw('b.name')
-            ->orderBy('amount', 'desc')
-            ->get();
+            ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
+            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
+            ifnull(sum(amount), 0) as utility')
+            ->join('accounts', 'account_id', 'accounts.id')
+            ->join('currencies', 'badge_id', 'currencies.id')
+            ->first();
 
             $saving = 0;
             $income = 0;
             foreach ($group_expensive as &$value) {
                 if($value->name === 'Ingresos') {
-                    $income = $value->amount + $close_open_transfer->income;
-                    $saving = $value->amount + $close_open_transfer->income;
-                    $value->amount += $close_open_transfer->income;
+                    $income = $close_open->income;
+                    $saving = $close_open->income;
+                    $value->amount = $close_open->income;
                 } else {
                     if($value->name === 'Gastos Fijos') {
                         $value->amount += $close_open_transfer->expensive;
                     }
+                    $value->amount = $value->amount * 1;
                     $value->porcent = round(abs($value->amount) / $income * 100, 2);
                     $saving += $value->amount;
                 }
