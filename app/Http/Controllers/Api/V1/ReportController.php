@@ -170,7 +170,7 @@ class ReportController extends Controller
                         $value->amount += $close_open_transfer->expensive;
                     }
                     $value->amount = $value->amount * 1;
-                    $value->porcent = round(abs($value->amount) / $income * 100, 2);
+                    $value->porcent = $income === 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
                     $saving += $value->amount;
                 }
             }
@@ -187,53 +187,13 @@ class ReportController extends Controller
             $end = Carbon::parse($end_date);
 
             if($init->diffInDays($end) < 90) {
-                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_balance');
-                
-                // income by transfer diferent currency by date
-                $incomes_transfer = Movement::where([
-                    ['movements.user_id', $user->id],
-                    ['movements.trm', '<>', 1],
-                    ['currencies.id', $currency],
-                ])
-                ->whereDate('date_purchase', '>=', $init_date)
-                ->whereDate('date_purchase', '<=', $end_date)
-                ->selectRaw('DATE_FORMAT(date_purchase, "%b-%d") as date,
-                ifnull(sum(amount), 0) as amount')
-                ->join('accounts', 'account_id', 'accounts.id')
-                ->join('currencies', 'badge_id', 'currencies.id')
-                ->groupByRaw('DATE_FORMAT(date_purchase, "%b-%d")')
-                ->orderByRaw('DATE_FORMAT(date_purchase, "%b-%d")')
-                ->get()
-                ->toArray();
+                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c) alias, report_balance');
             } else {
-                $balance = \DB::select('select date, cast(amount as float) as amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @group_id := '.env('GROUP_TRANSFER_ID').' g) alias, report_global_balance');
-                
-                // income by transfer diferent currency by date
-                $incomes_transfer = Movement::where([
-                    ['movements.user_id', $user->id],
-                    ['movements.trm', '<>', 1],
-                    ['currencies.id', $currency],
-                ])
-                ->whereDate('date_purchase', '>=', $init_date)
-                ->whereDate('date_purchase', '<=', $end_date)
-                ->selectRaw('DATE_FORMAT(date_purchase, "%b-01") as date,
-                ifnull(sum(amount), 0) as amount')
-                ->join('accounts', 'account_id', 'accounts.id')
-                ->join('currencies', 'badge_id', 'currencies.id')
-                ->groupByRaw('DATE_FORMAT(date_purchase, "%b-01")')
-                ->orderByRaw('DATE_FORMAT(date_purchase, "%b-01")')
-                ->get()
-                ->toArray();
+                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c) alias, report_global_balance');
             }
 
             $acumAux = 0;
             foreach ($balance as $key => &$value) {
-                $data = array_filter($incomes_transfer, function ($transfer) use ($value) {
-                    return strtotime($transfer['date']) === strtotime($value->date);
-                });
-                if(count($data) > 0){
-                    $value->amount += array_values($data)[0]['amount'];
-                }
                 $prevAmount = $value->amount;
                 $value->amount += $acumAux;
                 $acumAux += $prevAmount;
