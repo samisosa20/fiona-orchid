@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
  
 use App\Models\Heritage;
 use App\Models\Movement;
+use App\Models\Account;
 
 class HeritageController extends Controller
 {
@@ -215,8 +216,14 @@ class HeritageController extends Controller
             ->groupByRaw('year(date_purchase), currencies.code, badge_id')
             ->get();
             foreach ($value->balance  as &$balance) {
-
-                $balance->movements = $balance->movements * 1;
+                $init_amout = Account::where([
+                    ['user_id', $user->id],
+                    ['badge_id', $balance->badge_id],
+                ])
+                ->selectRaw('sum(init_amount) as amount')
+                ->whereNull('deleted_at')
+                ->first();
+                $balance->movements = $balance->movements + $init_amout->amount;
                 $comercial_amount = Heritage::where([
                     ['user_id', $user->id],
                     ['year', $value->year],
