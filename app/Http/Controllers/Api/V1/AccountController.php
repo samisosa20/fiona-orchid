@@ -167,6 +167,14 @@ class AccountController extends Controller
             ->join('categories', 'movements.category_id', 'categories.id')
             ->first();
 
+            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i, @account_id := '.$id.' a) alias, general_month_year_account');
+            $balance_total = \DB::select('select * from (SELECT @user_id := '.$user->id.'  i, @account_id := '.$id.' a) alias, general_balance_account');
+
+            $balance_adjust = $balance_total = array_map(function($element) {
+                $element->type = "total";
+                return $element;
+              }, $balance_total);
+
             $month = [
                 'type' => 'month',
                 'incomes' => $month_transfer->incomes + $month_balance->incomes,
@@ -187,6 +195,8 @@ class AccountController extends Controller
             $data->month = $month;
             $data->year = $year;
             $data->total = $total;
+            $data->balance = array_merge($movements, $balance_adjust);
+            
             return response()->json($data);
         }
         return response([
