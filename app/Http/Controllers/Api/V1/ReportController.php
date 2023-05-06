@@ -114,7 +114,7 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(abs(sum(amount)) as double(15, 2)) as amount')
+            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(abs(sum(amount)) as decimal) as amount')
             ->leftJoin('categories as b', 'a.category_id', 'b.id')
             ->join('movements', 'a.id', 'movements.category_id')
             ->join('accounts', 'accounts.id', 'movements.account_id')
