@@ -29,7 +29,7 @@ class ReportController extends Controller
             ->first();
 
             // get balance without transferns
-            $close_open = \DB::select('select cast(open_balance as double(15,2)) as open_balance, cast(incomes as double(15,2)) as income, cast(expensives as double(15,2)) as expensive, cast(end_balance as double(15,2)) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
+            $close_open = \DB::select('select cast(open_balance asdecimal) as open_balance, cast(incomes asdecimal) as income, cast(expensives asdecimal) as expensive, cast(end_balance asdecimal) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
 
 
 
