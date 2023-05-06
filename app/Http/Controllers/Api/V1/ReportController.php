@@ -29,7 +29,7 @@ class ReportController extends Controller
             ->first();
 
             // get balance without transferns
-            $close_open = \DB::select('select cast(open_balance as decimal) as open_balance, cast(incomes as decimal) as income, cast(expensives as decimal) as expensive, cast(end_balance as decimal) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
+            $close_open = \DB::select('select cast(open_balance as float) as open_balance, cast(incomes as float) as income, cast(expensives as float) as expensive, cast(end_balance as float) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
 
 
 
@@ -114,7 +114,7 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(abs(sum(amount)) as decimal) as amount')
+            ->selectRaw('if(a.category_id is null, a.name, b.name) as category, cast(abs(sum(amount)) as float) as amount')
             ->leftJoin('categories as b', 'a.category_id', 'b.id')
             ->join('movements', 'a.id', 'movements.category_id')
             ->join('accounts', 'accounts.id', 'movements.account_id')

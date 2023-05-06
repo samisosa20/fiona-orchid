@@ -210,7 +210,7 @@ class HeritageController extends Controller
                 ['movements.user_id', $user->id],
             ])
             ->whereYear('date_purchase', '=', $value->year)
-            ->selectRaw('year(date_purchase) as year, currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as decimal(15,2)) as movements')
+            ->selectRaw('year(date_purchase) as year, currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
             ->join('accounts', 'accounts.id', 'movements.account_id')
             ->join('currencies', 'currencies.id', 'accounts.badge_id')
             ->groupByRaw('year(date_purchase), currencies.code, badge_id')
