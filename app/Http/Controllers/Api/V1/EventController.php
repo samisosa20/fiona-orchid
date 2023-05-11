@@ -24,8 +24,18 @@ class EventController extends Controller
         $events = Event::where([
             ['user_id', $user->id]
         ])
-        ->withBalance()
         ->get();
+        
+        foreach ($events as &$event) {
+            $event->balance = Movement:: where([
+                ['movements.event_id', $event->id],
+            ])
+            ->selectRaw('currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->join('currencies', 'currencies.id', 'accounts.badge_id')
+            ->groupByRaw('currencies.code, badge_id')
+            ->get();
+        }
 
         return response()->json($events);
     }
