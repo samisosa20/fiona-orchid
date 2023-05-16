@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Orchid\Screens\User;
+namespace App\Orchid\Screens\Account;
 
-use App\Orchid\Layouts\User\UserEditLayout;
-use App\Orchid\Layouts\User\UserFiltersLayout;
-use App\Orchid\Layouts\User\UserListLayout;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Orchid\Platform\Models\User;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-class UserListScreen extends Screen
+use App\Orchid\Layouts\Account\AccountListLayout;
+
+use App\Models\Account;
+
+class AccountListScreen extends Screen
 {
     /**
      * Fetch data to be displayed on the screen.
@@ -25,10 +25,12 @@ class UserListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'users' => User::with('roles')
-                ->filters(UserFiltersLayout::class)
-                ->defaultSort('id', 'desc')
-                ->paginate(),
+            'accounts' => Account::withTrashed()
+            ->where([
+                ['user_id', 1]
+            ])
+            ->with('currency')
+            ->paginate(),
         ];
     }
 
@@ -39,7 +41,7 @@ class UserListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'User';
+        return 'Accounts';
     }
 
     /**
@@ -49,17 +51,7 @@ class UserListScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'All registered users';
-    }
-
-    /**
-     * @return iterable|null
-     */
-    public function permission(): ?iterable
-    {
-        return [
-            'platform.systems.users',
-        ];
+        return 'Register all your accounts';
     }
 
     /**
@@ -72,7 +64,7 @@ class UserListScreen extends Screen
         return [
             Link::make(__('Add'))
                 ->icon('plus')
-                ->route('platform.systems.users.create'),
+                ->route('platform.accounts.create'),
         ];
     }
 
@@ -84,51 +76,19 @@ class UserListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            UserFiltersLayout::class,
-            UserListLayout::class,
-
-            Layout::modal('asyncEditUserModal', UserEditLayout::class)
-                ->async('asyncGetUser'),
+            AccountListLayout::class,
         ];
     }
 
-    /**
-     * @param User $user
-     *
-     * @return array
-     */
-    public function asyncGetUser(User $user): iterable
-    {
-        return [
-            'user' => $user,
-        ];
-    }
 
-    /**
-     * @param Request $request
-     * @param User    $user
-     */
-    public function saveUser(Request $request, User $user): void
-    {
-        $request->validate([
-            'user.email' => [
-                'required',
-                Rule::unique(User::class, 'email')->ignore($user),
-            ],
-        ]);
-
-        $user->fill($request->input('user'))->save();
-
-        Toast::info(__('User was saved.'));
-    }
 
     /**
      * @param Request $request
      */
-    public function remove(Request $request): void
+    public function activate(Request $request): void
     {
-        User::findOrFail($request->get('id'))->delete();
+        Account::onlyTrashed()->find($request->get('id'))->restore();
 
-        Toast::info(__('User was removed'));
+        Toast::success(__('The account was activated.'));
     }
 }

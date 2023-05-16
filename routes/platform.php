@@ -18,6 +18,11 @@ use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
+use App\Orchid\Screens\Account\AccountListScreen;
+use App\Orchid\Screens\Account\AccountEditScreen;
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Dashboard Routes
@@ -103,8 +108,23 @@ Route::screen('example-advanced', ExampleFieldsAdvancedScreen::class)->name('pla
 Route::screen('/dashboard', PlatformScreen::class)
     ->name('platform.dashboard');
 
-Route::screen('/accounts', UserProfileScreen::class)
+// Platform > accounts
+Route::screen('/accounts', AccountListScreen::class)
     ->name('platform.accounts')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(__('Accounts'), route('platform.accounts')));
+
+// Platform > Accounts > Edit
+Route::screen('accounts/{account}/edit', AccountEditScreen::class)
+->name('platform.accounts.edit')
+->breadcrumbs(fn (Trail $trail, $account) => $trail
+    ->parent('platform.accounts')
+    ->push($account->name, route('platform.accounts.edit', $account)));
+
+// Platform > accounts > Create
+Route::screen('accounts/create', AccountEditScreen::class)
+->name('platform.accounts.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.accounts')
+    ->push(__('Create'), route('platform.accounts.create')));
