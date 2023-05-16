@@ -97,3 +97,14 @@ Route::screen('example-cards', ExampleCardsScreen::class)->name('platform.exampl
 Route::screen('example-advanced', ExampleFieldsAdvancedScreen::class)->name('platform.example.advanced');
 
 //Route::screen('idea', Idea::class, 'platform.screens.idea');
+
+/** --------------------------------------------------- */
+
+Route::screen('/dashboard', PlatformScreen::class)
+    ->name('platform.dashboard');
+
+Route::screen('/accounts', UserProfileScreen::class)
+    ->name('platform.accounts')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Accounts'), route('platform.accounts')));
