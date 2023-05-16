@@ -20,6 +20,14 @@ use Tabuna\Breadcrumbs\Trail;
 
 use App\Orchid\Screens\Account\AccountListScreen;
 use App\Orchid\Screens\Account\AccountEditScreen;
+use App\Orchid\Screens\Account\MovementsListScreen;
+use App\Orchid\Screens\Heritage\HeritageListScreen;
+use App\Orchid\Screens\Heritage\HeritageEditScreen;
+use App\Orchid\Screens\Event\EventListScreen;
+use App\Orchid\Screens\Event\EventEditScreen;
+use App\Orchid\Screens\Movement\MovementEditScreen;
+use App\Orchid\Screens\Category\CategoryListScreen;
+use App\Orchid\Screens\Category\CategoryEditScreen;
 
 
 
@@ -115,6 +123,13 @@ Route::screen('/accounts', AccountListScreen::class)
         ->parent('platform.index')
         ->push(__('Accounts'), route('platform.accounts')));
 
+// Platform > Accounts > Movements
+Route::screen('accounts/{account}/movements', MovementsListScreen::class)
+->name('platform.accounts.movements')
+->breadcrumbs(fn (Trail $trail, $account) => $trail
+    ->parent('platform.accounts')
+    ->push($account->name, route('platform.accounts.movements', $account)));
+
 // Platform > Accounts > Edit
 Route::screen('accounts/{account}/edit', AccountEditScreen::class)
 ->name('platform.accounts.edit')
@@ -128,3 +143,87 @@ Route::screen('accounts/create', AccountEditScreen::class)
 ->breadcrumbs(fn (Trail $trail) => $trail
     ->parent('platform.accounts')
     ->push(__('Create'), route('platform.accounts.create')));
+
+// Platform > Heritage
+Route::screen('/heritages', HeritageListScreen::class)
+    ->name('platform.heritages')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Heritages'), route('platform.heritages')));
+
+// Platform > Heritage > Edit
+Route::screen('heritages/{year}/year', HeritageEditScreen::class)
+->name('platform.heritages.year')
+->breadcrumbs(fn (Trail $trail,int $year) => $trail
+    ->parent('platform.heritages')
+    ->push($year, route('platform.heritages.year', $year)));
+
+// Platform > Heritage > Edit
+Route::screen('heritages/{heritage}/edit', HeritageEditScreen::class)
+->name('platform.heritages.edit')
+->breadcrumbs(fn (Trail $trail, $heritage) => $trail
+    ->parent('platform.heritages')
+    ->push($heritage->name, route('platform.heritages.edit', $heritage)));
+
+// Platform > Heritage > Create
+Route::screen('heritages/create', HeritageEditScreen::class)
+->name('platform.heritages.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.heritages')
+    ->push(__('Create'), route('platform.heritages.create')));
+
+// Platform > Event
+Route::screen('/events', EventListScreen::class)
+    ->name('platform.events')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Events'), route('platform.events')));
+
+// Platform > Event > Edit
+Route::screen('events/{event}/edit', EventEditScreen::class)
+->name('platform.events.edit')
+->breadcrumbs(fn (Trail $trail, $event) => $trail
+    ->parent('platform.events')
+    ->push($event->name, route('platform.events.edit', $event)));
+
+// Platform > Event > Create
+Route::screen('events/create', EventEditScreen::class)
+->name('platform.events.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.events')
+    ->push(__('Create'), route('platform.events.create')));
+
+// Platform > Movements > Edit
+Route::screen('movements/{movement}/edit', MovementEditScreen::class)
+->name('platform.movements.edit')
+->breadcrumbs(fn (Trail $trail, $movement) => $trail
+    ->parent('platform.index')
+    ->push($movement->name, route('platform.movements.edit', $movement)));
+
+// Platform > Movements > Create
+Route::screen('movement/create', MovementEditScreen::class)
+->name('platform.movement.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.index')
+    ->push(__('Create'), route('platform.movement.create')));
+
+// Platform > Category
+Route::screen('/categories', CategoryListScreen::class)
+    ->name('platform.categories')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Categories'), route('platform.categories')));
+
+// Platform > Category > Edit
+Route::screen('categories/{category}/edit', CategoryEditScreen::class)
+->name('platform.categories.edit')
+->breadcrumbs(fn (Trail $trail, $category) => $trail
+    ->parent('platform.categories')
+    ->push($category->name, route('platform.categories.edit', $category)));
+
+// Platform > Category > Create
+Route::screen('categories/create', CategoryEditScreen::class)
+->name('platform.categories.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.categories')
+    ->push(__('Create'), route('platform.categories.create')));

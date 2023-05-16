@@ -64,4 +64,15 @@ class Category extends Model
     {
         return $this->hasMany(Category::class, 'category_id', 'id');
     }
+
+    public function scopeListCategory($query, $user)
+    {
+        return $query->where([
+            ['categories.user_id', $user],
+            ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
+        ])
+        ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(b.name, "\n ", categories.name)) as title, categories.category_id as category_father')
+        ->leftJoin('categories as b', 'b.id', 'categories.category_id')
+        ->orderBy('categories.name');
+    }
 }

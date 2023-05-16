@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Orchid\Screens\Account;
+namespace App\Orchid\Screens\Event;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,11 +11,12 @@ use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-use App\Orchid\Layouts\Account\AccountListLayout;
+use App\Orchid\Layouts\Event\EventListLayout;
 
-use App\Models\Account;
+use App\Models\Event;
+use App\Models\Movement;
 
-class AccountListScreen extends Screen
+class EventListScreen extends Screen
 {
     /**
      * Fetch data to be displayed on the screen.
@@ -24,14 +25,25 @@ class AccountListScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        return [
-            'accounts' => Account::withTrashed()
-            ->where([
-                ['user_id', $request->user()->id]
+        $events = Event::where([
+            ['user_id', $request->user()->id]
+        ])
+        ->paginate();
+        
+        foreach ($events as &$event) {
+            $event->balance = Movement:: where([
+                ['movements.event_id', $event->id],
             ])
-            ->withBalance()
-            ->with('currency')
-            ->paginate(),
+            ->selectRaw('currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
+            ->join('accounts', 'accounts.id', 'movements.account_id')
+            ->join('currencies', 'currencies.id', 'accounts.badge_id')
+            ->groupByRaw('currencies.code, badge_id')
+            ->get();
+        }
+
+
+        return [
+            'events' => $events,
         ];
     }
 
@@ -42,7 +54,7 @@ class AccountListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Accounts';
+        return 'Events';
     }
 
     /**
@@ -52,7 +64,7 @@ class AccountListScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Register all your accounts';
+        return 'Register all your Events';
     }
 
     /**
@@ -65,7 +77,7 @@ class AccountListScreen extends Screen
         return [
             Link::make(__('Add'))
                 ->icon('plus')
-                ->route('platform.accounts.create'),
+                ->route('platform.events.create'),
         ];
     }
 
@@ -77,7 +89,7 @@ class AccountListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            AccountListLayout::class,
+            EventListLayout::class,
         ];
     }
 
@@ -88,8 +100,8 @@ class AccountListScreen extends Screen
      */
     public function activate(Request $request): void
     {
-        Account::onlyTrashed()->find($request->get('id'))->restore();
+        Event::onlyTrashed()->find($request->get('id'))->restore();
 
-        Toast::success(__('The account was activated.'));
+        Toast::success(__('The Event was activated.'));
     }
 }

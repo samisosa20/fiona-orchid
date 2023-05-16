@@ -10,7 +10,6 @@ use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Layouts\Table;
 use Orchid\Screen\TD;
 use Orchid\Screen\Fields\Input;
-use NumberFormatter;
 
 use App\Models\Account;
 
@@ -45,6 +44,10 @@ class AccountListLayout extends Table
                             ->route('platform.accounts.edit', $account->id)
                             ->icon('pencil')
                             ->canSee(!$account->deleted_at),
+                        Link::make(__('Movements'))
+                            ->route('platform.accounts.movements', $account->id)
+                            ->icon('directions')
+                            ->canSee(!$account->deleted_at),
                         Button::make(__('Active'))
                             ->icon('check')
                             ->confirm(__('The account will be reactivated.'))
@@ -64,25 +67,20 @@ class AccountListLayout extends Table
                 ->cantHide()
                 ->render(fn (Account $account) => $account->description),
 
+            TD::make('balance', __('Balance'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (Account $account) => number_format($account->balance + $account->init_amount, 2, ',', '.')),
+
             TD::make('badge_id', __('Currency'))
                 ->sort()
                 ->cantHide()
                 ->render(fn (Account $account) => $account->currency->code),
             
-            TD::make('init_amount', __('Initial Amount'))
-                ->sort()
-                ->cantHide()
-                ->render(fn (Account $account) => number_format($account->init_amount, 2, ',', '.')),
-            
             TD::make('type', __('Type'))
                 ->cantHide()
                 ->sort()
                 ->render(fn (Account $account) => $account->type),
-                
-            TD::make('balance', __('Balance'))
-                ->sort()
-                ->cantHide()
-                ->render(fn (Account $account) => number_format($account->balance ?? 0, 2, ',', '.')),
             
             TD::make('status', __('Estado'))
                 ->sort()

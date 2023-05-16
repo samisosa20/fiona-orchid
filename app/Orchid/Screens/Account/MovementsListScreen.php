@@ -11,26 +11,35 @@ use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-use App\Orchid\Layouts\Account\AccountListLayout;
+use App\Orchid\Layouts\Account\MovementsListLayout;
 
 use App\Models\Account;
+use App\Models\Movement;
 
-class AccountListScreen extends Screen
+class MovementsListScreen extends Screen
 {
+    /**
+     * @var Account
+     */
+    public $account;
+
     /**
      * Fetch data to be displayed on the screen.
      *
+     * @param Account $account
+     *
      * @return array
      */
-    public function query(Request $request): iterable
+    public function query(Account $account, Request $request): iterable
     {
         return [
-            'accounts' => Account::withTrashed()
-            ->where([
-                ['user_id', $request->user()->id]
+            'account' => $account,
+            'movements' => Movement::where([
+                ['account_id', $account->id],
+                ['user_id', $request->user()->id],
             ])
-            ->withBalance()
-            ->with('currency')
+            ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
+            ->orderBy('date_purchase', 'desc')
             ->paginate(),
         ];
     }
@@ -42,7 +51,7 @@ class AccountListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Accounts';
+        return $this->account->name." ".$this->account->currency->code;
     }
 
     /**
@@ -52,7 +61,7 @@ class AccountListScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Register all your accounts';
+        return $this->account->type;
     }
 
     /**
@@ -63,9 +72,9 @@ class AccountListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            Link::make(__('Add'))
+            Link::make(__('Movement'))
                 ->icon('plus')
-                ->route('platform.accounts.create'),
+                ->route('platform.movement.create'),
         ];
     }
 
@@ -77,7 +86,7 @@ class AccountListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            AccountListLayout::class,
+            MovementsListLayout::class,
         ];
     }
 
