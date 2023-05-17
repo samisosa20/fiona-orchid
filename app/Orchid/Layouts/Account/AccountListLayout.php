@@ -60,7 +60,14 @@ class AccountListLayout extends Table
             TD::make('name', __('Name'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Account $account) => $account->name),
+                ->render(function (Account $account){
+                    if(!$account->deleted_at) {
+                        return Link::make($account->name)
+                            ->route('platform.accounts.movements', $account->id);
+                    } else {
+                        return $account->name;
+                    }
+                }),
 
             TD::make('description', __('Description'))
                 ->sort()
@@ -70,7 +77,10 @@ class AccountListLayout extends Table
             TD::make('balance', __('Balance'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Account $account) => number_format($account->balance + $account->init_amount, 2, ',', '.')),
+                ->render(function (Account $account){
+                    $color = $account->balance + $account->init_amount > 0 ? 'success' : 'danger'; 
+                    return "<p class='text-$color m-0'>".number_format($account->balance + $account->init_amount, 2, ',', '.')."</p>";
+                }),
 
             TD::make('badge_id', __('Currency'))
                 ->sort()

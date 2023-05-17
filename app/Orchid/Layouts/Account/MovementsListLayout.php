@@ -61,7 +61,10 @@ class MovementsListLayout extends Table
             TD::make('amount', __('Amount'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Movement $movement) => number_format($movement->amount, 2, ',', '.')),
+                ->render(function (Movement $movement){
+                    $color = $movement->amount > 0 ? 'success' : 'danger'; 
+                    return "<p class='text-$color m-0'>".number_format($movement->amount, 2, ',', '.')."</p>";
+                }),
 
             TD::make('description', __('Description'))
                 ->sort()

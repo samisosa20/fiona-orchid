@@ -3,6 +3,7 @@
         {!! Orchid\Screen\Fields\Select::make('movement[account_id]')
             ->fromModel(App\Models\Account::class, 'name')
             ->empty()
+            ->value($defaultAccount)
             ->required()
             ->title(__('Account'))
         !!}

@@ -44,6 +44,7 @@ class EventListScreen extends Screen
 
         return [
             'events' => $events,
+            'movements' => []
         ];
     }
 
@@ -90,10 +91,25 @@ class EventListScreen extends Screen
     {
         return [
             EventListLayout::class,
+            Layout::modal('movementsModal', [Layout::view('layouts.movement.list')])
+                ->async('asyncGetMovements')
+                ->title(__('Movements'))
+                ->applyButton('Guardar')
+                ->withoutApplyButton(),
         ];
     }
 
-
+/**
+     * @param Event $event
+     *
+     * @return array
+     */
+    public function asyncGetMovements(Event $event): iterable
+    {
+        return [
+            'movements' => $event->movements,
+        ];
+    }
 
     /**
      * @param Request $request

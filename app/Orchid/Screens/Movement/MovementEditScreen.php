@@ -12,6 +12,7 @@ use Orchid\Screen\Screen;
 use Orchid\Support\Color;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\Movement;
 
@@ -25,6 +26,8 @@ class MovementEditScreen extends Screen
      */
     public $movement;
 
+    public $route;
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -34,8 +37,14 @@ class MovementEditScreen extends Screen
      */
     public function query(Movement $movement, Request $request): iterable
     {
+        $url = url()->previous();
+        
+        $request->session()->put('route', app('router')->getRoutes($url)->match(app('request')->create($url))->getName());
+        $request->session()->put('account_id', app('router')->getRoutes($url)->match(app('request')->create($url))->parameters()['account'] ?? null);
+
         return [
             'movement' => $movement,
+            'defaultAccount' => app('router')->getRoutes($url)->match(app('request')->create($url))->parameters()['account'] ?? null,
             'user' => $request->user(),
         ];
     }
@@ -87,7 +96,6 @@ class MovementEditScreen extends Screen
     public function layout(): iterable
     {
         return [
-
             Layout::block(MovementTypeLayout::class)
             ->title(__('Select Type')),
             Layout::block(Layout::view('layouts.movement.form'))
@@ -103,13 +111,25 @@ class MovementEditScreen extends Screen
      */
     public function save(Movement $movement, Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'movement.amount' => [
+                'required',
+                'not_in:0'
+            ],
+        ]);
+
+        if($validator->fails()){
+            Toast::error(__('Amount different 0.'));
+            return;
+        }
+        
         $movement->fill($request->collect('movement')->toArray())
             ->fill(['user_id' => $request->user()->id])
             ->save();
 
         Toast::info(__('Movement was saved.'));
 
-        return redirect()->back();
+        return redirect()->route(session('route'), session('account_id'));
     }
 
     /**
