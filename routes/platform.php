@@ -23,6 +23,7 @@ use App\Orchid\Screens\Account\AccountEditScreen;
 use App\Orchid\Screens\Account\MovementsListScreen;
 use App\Orchid\Screens\Heritage\HeritageListScreen;
 use App\Orchid\Screens\Heritage\HeritageEditScreen;
+use App\Orchid\Screens\Heritage\HeritageYearListScreen;
 use App\Orchid\Screens\Event\EventListScreen;
 use App\Orchid\Screens\Event\EventEditScreen;
 use App\Orchid\Screens\Movement\MovementEditScreen;
@@ -152,9 +153,9 @@ Route::screen('/heritages', HeritageListScreen::class)
         ->push(__('Heritages'), route('platform.heritages')));
 
 // Platform > Heritage > Edit
-Route::screen('heritages/{year}/year', HeritageEditScreen::class)
+Route::screen('heritages/{year}/year', HeritageYearListScreen::class)
 ->name('platform.heritages.year')
-->breadcrumbs(fn (Trail $trail,int $year) => $trail
+->breadcrumbs(fn (Trail $trail,string $year) => $trail
     ->parent('platform.heritages')
     ->push($year, route('platform.heritages.year', $year)));
 

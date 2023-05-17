@@ -11,7 +11,7 @@ use Orchid\Screen\TD;
 
 use App\Models\Heritage;
 
-class HeritageListLayout extends Table
+class HeritageYearListLayout extends Table
 {
     /**
      * @var string
@@ -38,25 +38,30 @@ class HeritageListLayout extends Table
                 ->render(fn (Heritage $heritage) => DropDown::make()
                     ->icon('options-vertical')
                     ->list([
-                        Link::make(__('View'))
-                            ->route('platform.heritages.year', $heritage->year)
-                            ->icon('eye'),
+                        Link::make(__('Edit'))
+                            ->route('platform.heritages.edit', $heritage->id)
+                            ->icon('pencil'),
                     ])),
 
-            TD::make('year', __('Year'))
+            TD::make('name', __('Name'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Heritage $heritage) => $heritage->year),
-            
-            TD::make('balance', __('Balance'))
+                ->render(fn (Heritage $heritage) => $heritage->name),
+
+            TD::make('year', __('Comercial Amount'))
+                ->sort()
                 ->cantHide()
-                ->render(function (Heritage $heritage){
-                    return "<div class='d-flex'>".implode(", ", array_map(function ($v) {
-                        $color = $v["amount"] > 0 ? 'success' : 'danger'; 
-                        return "<p class='text-$color m-0'>".number_format($v["amount"], 2, ',', '.'). " " . $v["currency"]."</p>";
-                    }, $heritage->balance->toArray()))."</div>";
-                }),
-                
+                ->render(fn (Heritage $heritage) => number_format($heritage->comercial_amount, 2, ',', '.')),
+
+            TD::make('year', __('Legal Amount'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (Heritage $heritage) => number_format($heritage->legal_amount, 2, ',', '.')),
+            
+            TD::make('currency', __('Currency'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (Heritage $heritage) => $heritage->currency->code),
         ];
     }
 }

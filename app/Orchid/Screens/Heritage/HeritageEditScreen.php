@@ -31,10 +31,11 @@ class HeritageEditScreen extends Screen
      *
      * @return array
      */
-    public function query(Heritage $heritage): iterable
+    public function query(Heritage $heritage, Request $request): iterable
     {
         return [
-            'Heritage' => $heritage,
+            'user' => $request->user(),
+            'heritage' => $heritage,
         ];
     }
 
@@ -45,7 +46,7 @@ class HeritageEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return $this->heritage ? 'Edit Heritage' : 'Create Heritage';
+        return $this->heritage->id ? 'Edit Heritage' : 'Create Heritage';
     }
 
     /**
@@ -55,7 +56,7 @@ class HeritageEditScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Details such as name, email and password';
+        return null;
     }
 
     /**
@@ -71,7 +72,7 @@ class HeritageEditScreen extends Screen
                 ->icon('trash')
                 ->confirm(__('Once the Heritage is deleted, all of its resources and data will be permanently deleted. Before deleting your Heritage, please download any data or information that you wish to retain.'))
                 ->method('remove')
-                ->canSee(!!$this->heritage),
+                ->canSee(!!$this->heritage->id),
 
             Button::make(__('Save'))
                 ->icon('check')

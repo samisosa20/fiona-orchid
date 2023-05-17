@@ -9,7 +9,6 @@ use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Layouts\Table;
 use Orchid\Screen\TD;
-use Orchid\Screen\Fields\Input;
 
 use App\Models\Account;
 
@@ -65,7 +64,7 @@ class AccountListLayout extends Table
                         return Link::make($account->name)
                             ->route('platform.accounts.movements', $account->id);
                     } else {
-                        return $account->name;
+                        return "<div class='form-group'><p class='btn btn-link m-0'>".$account->name."</p></div>";
                     }
                 }),
 

@@ -7,13 +7,10 @@ namespace App\Orchid\Layouts\Heritage;
 use Orchid\Screen\Field;
 use Orchid\Screen\Layouts\Rows;
 use Orchid\Screen\Fields\Input;
-use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Fields\Select;
 
 use App\Models\Currency;
 use App\Models\Movement;
-
-use App\Controllers\Types\CommonTypesController;
 
 class HeritageEditLayout extends Rows
 {
@@ -55,7 +52,9 @@ class HeritageEditLayout extends Rows
                 ->title(__('Currency')),
 
             Select::make('heritage.year')
-                ->fromModel(Movement::where([['user_id', 1]])->distinct('year')->selectRaw('year(date_purchase) as year'), 'year')
+                ->fromModel(Movement::where([['user_id', $this->query['user']->id]])
+                ->distinct('year')
+                ->selectRaw('year(date_purchase) as year'), 'year', 'year')
                 ->empty()
                 ->required()
                 ->title(__('Year')),

@@ -64,10 +64,10 @@ class EventListLayout extends Table
             TD::make('balance', __('Balance'))
                 ->cantHide()
                 ->render(function (Event $event){
-                    return implode(", ", array_map(function ($v) {
+                    return "<div class='d-flex'>".implode(", ", array_map(function ($v) {
                         $color = $v["movements"] > 0 ? 'success' : 'danger'; 
                         return "<p class='text-$color m-0'>".number_format($v["movements"], 2, ',', '.'). " " . $v["currency"]."</p>";
-                    }, $event->balance->toArray()));
+                    }, $event->balance->toArray()))."</div>";
                 }),            
 
         ];
