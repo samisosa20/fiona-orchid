@@ -15,6 +15,7 @@ use Orchid\Support\Facades\Toast;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\Movement;
+use App\Models\Category;
 
 use App\Orchid\Layouts\Movement\MovementTypeLayout;
 use App\Orchid\Layouts\Movement\MovementEditLayout;
@@ -115,17 +116,64 @@ class MovementEditScreen extends Screen
             'movement.amount' => [
                 'required',
                 'not_in:0'
-            ],
+            ]
         ]);
 
         if($validator->fails()){
             Toast::error(__('Amount different 0.'));
             return;
         }
+
+        if($request->input('movement')['type'] == 0) {
+            $movement->fill($request->collect('movement')->toArray())
+                ->fill(['user_id' => $request->user()->id])
+                ->save();
+        } else {
+            $validator = Validator::make($request->all(), [
+                'movement.account_end_id' => [
+                    'required',
+                ],
+            ]);
+    
+            if($validator->fails()){
+                Toast::error(__('Amount in is required.'));
+                return;
+            }
+            if($request->input('movement')['account_id'] === $request->input('movement')['account_end_id']) {
+                Toast::error(__('Amount in cant be iqual to Account out.'));
+                return;
+            }
+
+            $transfer_id = Category::where([
+                ['user_id', $request->user()->id],
+                ['group_id', env('GROUP_TRANSFER_ID')]
+            ])
+            ->first();
+
+             // Create out move
+             $movement = Movement::create([
+                'account_id' => $request->input('movement.account_id'),
+                'category_id' => $transfer_id->id,
+                'description' => $request->input('movement.description'),
+                'amount' => abs((float)$request->input('movement.amount')) * -1,
+                'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                'date_purchase' => $request->input('movement.date_purchase'),
+                'user_id' => $request->user()->id,
+            ]);
+
+            // Create in move
+            $movement = Movement::create([
+                'account_id' => $request->input('movement.account_end_id'),
+                'category_id' => $transfer_id->id,
+                'description' => $request->input('movement.description'),
+                'amount' => abs((float)$request->input('movement.amount_end')) ?? abs((float)$request->input('movement.amount')),
+                'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                'date_purchase' => $request->input('movement.date_purchase'),
+                'user_id' => $request->user()->id,
+                'transfer_id' => $movement->id
+            ]);
+        }
         
-        $movement->fill($request->collect('movement')->toArray())
-            ->fill(['user_id' => $request->user()->id])
-            ->save();
 
         Toast::info(__('Movement was saved.'));
 

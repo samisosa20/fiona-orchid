@@ -114,7 +114,7 @@ return [
     */
 
     'resource'      => [
-        'stylesheets' => [],
+        'stylesheets' => ['/assets/css/fiona.css'],
         'scripts'     => [],
     ],
 

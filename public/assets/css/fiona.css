@@ -1,0 +1,14 @@
+:root{
+    --primary-color: #201d2c;
+}
+
+.page-platform-login, .aside {
+    background: var(--primary-color);
+}
+
+.page-platform-login .copyright {
+    color: white;
+}
+.page-platform-login .copyright a {
+    color: #cad0d2;
+}
