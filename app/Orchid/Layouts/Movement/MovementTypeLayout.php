@@ -40,9 +40,9 @@ class MovementTypeLayout extends Rows
 
             DateTimer::make('movement.date_purchase')
                 ->allowInput()
-                ->format('Y-m-d H:m:i')
                 ->format24hr()
                 ->required()
+                ->enableTime()
                 ->value(now())
                 ->title(__('Date purchase')),
         ];

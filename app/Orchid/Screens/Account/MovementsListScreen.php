@@ -90,15 +90,14 @@ class MovementsListScreen extends Screen
         ];
     }
 
-
-
     /**
      * @param Request $request
      */
-    public function activate(Request $request): void
+    public function remove(Request $request): void
     {
-        Account::onlyTrashed()->find($request->get('id'))->restore();
+        Movement::findOrFail($request->get('id'))->delete();
 
-        Toast::success(__('The account was activated.'));
+        Toast::info(__('Movement was removed'));
     }
+
 }

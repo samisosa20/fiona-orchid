@@ -42,15 +42,13 @@ class MovementsListLayout extends Table
                     ->list([
                         Link::make(__('Edit'))
                             ->route('platform.movement.edit', $movement->id)
-                            ->icon('pencil')
-                            ->canSee(!$movement->deleted_at),
-                        Button::make(__('Active'))
-                            ->icon('check')
-                            ->confirm(__('The account will be reactivated.'))
-                            ->method('activate',[
+                            ->icon('pencil'),
+                        Button::make(__('Delete'))
+                            ->icon('trash')
+                            ->confirm(__('The movement will be delete.'))
+                            ->method('remove',[
                                 'id' => $movement->id,
-                            ])
-                            ->canSee(!!$movement->deleted_at),
+                            ]),
                     ])),
 
             TD::make('category_id', __('Category'))
@@ -76,6 +74,11 @@ class MovementsListLayout extends Table
                 ->sort()
                 ->cantHide()
                 ->render(fn (Movement $movement) => $movement->event->name ?? ''),
+            
+            TD::make('date_purchase', __('Date Purchase'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (Movement $movement) => $movement->date_purchase->toDateTimeString()),
 
         ];
     }
