@@ -41,7 +41,7 @@ class MovementsListLayout extends Table
                     ->icon('options-vertical')
                     ->list([
                         Link::make(__('Edit'))
-                            ->route('platform.accounts.edit', $movement->id)
+                            ->route('platform.movement.edit', $movement->id)
                             ->icon('pencil')
                             ->canSee(!$movement->deleted_at),
                         Button::make(__('Active'))

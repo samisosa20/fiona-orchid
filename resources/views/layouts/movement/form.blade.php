@@ -3,7 +3,7 @@
         {!! Orchid\Screen\Fields\Select::make('movement[account_id]')
             ->fromModel(App\Models\Account::class, 'name')
             ->empty()
-            ->value($defaultAccount)
+            ->value($defaultAccount ?? $movement->account_id)
             ->required()
             ->title(__('Account'))
             !!}
@@ -14,7 +14,7 @@
                 ->required()
                 ->value($defaultAccount)
                 ->title(__('Account in'))
-                !!}
+            !!}
         </div>
         <div id="container-movement" class="mb-3">
             {!! Orchid\Screen\Fields\Select::make('movement[category_id]')
@@ -26,6 +26,7 @@
                 ->leftJoin('categories as b', 'b.id', 'categories.category_id')
                 ->orderBy('categories.name'), 'title')
                 ->required()
+                ->value($movement->category_id)
                 ->empty()
                 ->title(__('Category'))
             !!}
@@ -35,15 +36,27 @@
                 ])
                 ->whereDate('end_event', '>=', now()), 'name')
                 ->empty()
+                ->value($movement->event_id)
                 ->title(__('Event'))
             !!}
         </div>
+        <div id="container-amount-end" class="mb-3 d-none">
+        {!! Orchid\Screen\Fields\Input::make('movement[amount_end]')
+            ->type('number')
+            ->step(0.01)
+            ->title(__('Amount in'))
+        !!}
+
+        </div>
         {!! Orchid\Screen\Fields\TextArea::make('movement[description]')
             ->title('Comentario')
+            ->value($movement->description)
             ->maxlength(250)
         !!}
     </div>
 </fieldset>
+
+<input type="hidden" value="{{$accounts}}" id="accounts-badge" />
 
 @push('scripts')
     @vite(['resources/js/app.js'])

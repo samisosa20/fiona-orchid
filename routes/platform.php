@@ -208,6 +208,13 @@ Route::screen('movement/create', MovementEditScreen::class)
     ->parent('platform.index')
     ->push(__('Create'), route('platform.movement.create')));
 
+// Platform > Movements > Edit
+Route::screen('movement/{movement}/edit', MovementEditScreen::class)
+->name('platform.movement.edit')
+->breadcrumbs(fn (Trail $trail, $movement) => $trail
+    ->parent('platform.movement.create')
+    ->push(__('Edit'), route('platform.movement.edit', $movement)));
+
 // Platform > Category
 Route::screen('/categories', CategoryListScreen::class)
     ->name('platform.categories')

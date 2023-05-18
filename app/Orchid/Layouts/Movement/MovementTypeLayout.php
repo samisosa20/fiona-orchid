@@ -34,7 +34,6 @@ class MovementTypeLayout extends Rows
 
             Input::make('movement.amount')
                 ->type('number')
-                ->value(0)
                 ->step(0.01)
                 ->required()
                 ->title(__('Amount')),

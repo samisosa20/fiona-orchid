@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Models\Movement;
 use App\Models\Category;
+use App\Models\Account;
 
 use App\Orchid\Layouts\Movement\MovementTypeLayout;
 use App\Orchid\Layouts\Movement\MovementEditLayout;
@@ -43,10 +44,17 @@ class MovementEditScreen extends Screen
         $request->session()->put('route', app('router')->getRoutes($url)->match(app('request')->create($url))->getName());
         $request->session()->put('account_id', app('router')->getRoutes($url)->match(app('request')->create($url))->parameters()['account'] ?? null);
 
+        $accounts = Account::where([
+            ['user_id', $request->user()->id],
+        ])
+        ->select('id', 'badge_id')
+        ->get();
+
         return [
             'movement' => $movement,
             'defaultAccount' => app('router')->getRoutes($url)->match(app('request')->create($url))->parameters()['account'] ?? null,
             'user' => $request->user(),
+            'accounts' => $accounts
         ];
     }
 
@@ -166,7 +174,7 @@ class MovementEditScreen extends Screen
                 'account_id' => $request->input('movement.account_end_id'),
                 'category_id' => $transfer_id->id,
                 'description' => $request->input('movement.description'),
-                'amount' => abs((float)$request->input('movement.amount_end')) ?? abs((float)$request->input('movement.amount')),
+                'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
                 'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
                 'date_purchase' => $request->input('movement.date_purchase'),
                 'user_id' => $request->user()->id,

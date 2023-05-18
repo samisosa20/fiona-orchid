@@ -1,5 +1,3 @@
-import TomSelect from "tom-select";
-
 export const controllerRelation = () => {
   var selects = document.querySelectorAll('select');
   selects.forEach((select) => {
