@@ -31,6 +31,7 @@ use App\Orchid\Screens\Event\EventEditScreen;
 use App\Orchid\Screens\Movement\MovementEditScreen;
 use App\Orchid\Screens\Category\CategoryListScreen;
 use App\Orchid\Screens\Category\CategoryEditScreen;
+use App\Orchid\Screens\Report\ReportScreen;
 
 
 
@@ -46,7 +47,7 @@ use App\Orchid\Screens\Category\CategoryEditScreen;
 */
 
 // Main
-Route::screen('/main', PlatformScreen::class)
+Route::screen('/main', ReportScreen::class)
     ->name('platform.main');
 
 // Platform > Profile
@@ -98,26 +99,8 @@ Route::screen('roles', RoleListScreen::class)
         ->parent('platform.index')
         ->push(__('Roles'), route('platform.systems.roles')));
 
-// Example...
-Route::screen('example', ExampleScreen::class)
-    ->name('platform.example')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push('Example screen'));
-
-Route::screen('example-fields', ExampleFieldsScreen::class)->name('platform.example.fields');
-Route::screen('example-layouts', ExampleLayoutsScreen::class)->name('platform.example.layouts');
-Route::screen('example-charts', ExampleChartsScreen::class)->name('platform.example.charts');
-Route::screen('example-editors', ExampleTextEditorsScreen::class)->name('platform.example.editors');
-Route::screen('example-cards', ExampleCardsScreen::class)->name('platform.example.cards');
-Route::screen('example-advanced', ExampleFieldsAdvancedScreen::class)->name('platform.example.advanced');
-
-//Route::screen('idea', Idea::class, 'platform.screens.idea');
 
 /** --------------------------------------------------- */
-
-Route::screen('/dashboard', PlatformScreen::class)
-    ->name('platform.dashboard');
 
 // Platform > accounts
 Route::screen('/accounts', AccountListScreen::class)
