@@ -1,6 +1,6 @@
 import {controllerRelation } from '../controllers'
 const pageMovement = () => {
-    if (window.location.pathname === "/movement/create") {
+    if (window.location.pathname === "/movement/create" || /^\/movement\/.+\/edit$/.test(window.location.pathname)) {
 
         console.log('run movement page')
         controllerRelation()
@@ -8,12 +8,13 @@ const pageMovement = () => {
         const listAccountBadge = JSON.parse(document.querySelector('#accounts-badge').value)
         
         const handleChangeType = (value) => {
+            console.log(value)
             // if is transfer mode
             const account_id = document.querySelector('[name="movement\\[account_id\\]"')
             const category_id = document.querySelector('[name="movement\\[category_id\\]"')
             const account_end_id = document.querySelector('[name="movement\\[account_end_id\\]"')
             const label_account_id = account_id.parentNode.parentNode.querySelector('label');
-            if(value == 1) {
+            if(value === 'transfer') {
                 document.querySelector('#container-account_in').classList.remove('d-none')
                 document.querySelector('#container-movement').classList.add('d-none')
                 label_account_id.innerHTML = 'Account out<sup class="text-danger">*</sup>';
@@ -51,6 +52,7 @@ const pageMovement = () => {
         const type = document.querySelector('[name="movement\\[type\\]"')
         const accountStart = document.querySelector('[name="movement\\[account_id\\]"')
         const accountEnd = document.querySelector('[name="movement\\[account_end_id\\]"')
+
         type.addEventListener('change', (e) => handleChangeType(e.target.value))
         accountStart.addEventListener('change', () => handleChangeAccounts())
         accountEnd.addEventListener('change', () => handleChangeAccounts())

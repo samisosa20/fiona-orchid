@@ -3,7 +3,7 @@
         {!! Orchid\Screen\Fields\Select::make('movement[account_id]')
             ->fromModel(App\Models\Account::class, 'name')
             ->empty()
-            ->value($defaultAccount ?? $movement->account_id)
+            ->value($accountOut ?? $defaultAccount)
             ->required()
             ->title(__('Account'))
             !!}
@@ -12,7 +12,7 @@
                 ->fromModel(App\Models\Account::class, 'name')
                 ->empty()
                 ->required()
-                ->value($defaultAccount)
+                ->value($accountIn)
                 ->title(__('Account in'))
             !!}
         </div>
@@ -44,6 +44,7 @@
         {!! Orchid\Screen\Fields\Input::make('movement[amount_end]')
             ->type('number')
             ->step(0.01)
+            ->value($amountEnd)
             ->title(__('Amount in'))
         !!}
 

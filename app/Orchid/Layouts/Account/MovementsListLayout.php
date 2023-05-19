@@ -54,7 +54,8 @@ class MovementsListLayout extends Table
             TD::make('category_id', __('Category'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Movement $movement) => $movement->category->name),
+                ->render(fn (Movement $movement) => Link::make($movement->category->name)
+                ->route('platform.movement.edit', $movement->id)),
                 
             TD::make('amount', __('Amount'))
                 ->sort()

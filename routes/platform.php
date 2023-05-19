@@ -18,6 +18,8 @@ use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
+use App\Models\Account;
+
 use App\Orchid\Screens\Account\AccountListScreen;
 use App\Orchid\Screens\Account\AccountEditScreen;
 use App\Orchid\Screens\Account\MovementsListScreen;
@@ -194,13 +196,6 @@ Route::screen('events/create', EventEditScreen::class)
     ->parent('platform.events')
     ->push(__('Create'), route('platform.events.create')));
 
-// Platform > Movements > Edit
-Route::screen('movements/{movement}/edit', MovementEditScreen::class)
-->name('platform.movements.edit')
-->breadcrumbs(fn (Trail $trail, $movement) => $trail
-    ->parent('platform.index')
-    ->push($movement->name, route('platform.movements.edit', $movement)));
-
 // Platform > Movements > Create
 Route::screen('movement/create', MovementEditScreen::class)
 ->name('platform.movement.create')
@@ -212,7 +207,8 @@ Route::screen('movement/create', MovementEditScreen::class)
 Route::screen('movement/{movement}/edit', MovementEditScreen::class)
 ->name('platform.movement.edit')
 ->breadcrumbs(fn (Trail $trail, $movement) => $trail
-    ->parent('platform.movement.create')
+    ->parent('platform.index')
+    ->push(__('Movement'))
     ->push(__('Edit'), route('platform.movement.edit', $movement)));
 
 // Platform > Category

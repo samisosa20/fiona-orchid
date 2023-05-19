@@ -26,8 +26,8 @@ class MovementTypeLayout extends Rows
         return [
             Select::make('movement.type')
                 ->options([
-                    'Movement',
-                    'Transfer'
+                    'movement' => 'Movement',
+                    'transfer' => 'Transfer'
                 ])
                 ->required()
                 ->title(__('Type Movement')),

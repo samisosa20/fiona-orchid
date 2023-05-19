@@ -50,11 +50,30 @@ class MovementEditScreen extends Screen
         ->select('id', 'badge_id')
         ->get();
 
+        //dd($movement->transferOut, $movement->transferIn);
+
+        $accountIn = null;
+        $accountOut = null;
+        $amountEnd = null;
+
+        if($movement){
+            $movement->type = $movement->transferOut || $movement->transferIn ? 'transfer' : 'movement';
+            if($movement->transferOut || $movement->transferIn){
+                $accountIn = $movement->transferIn ? $movement->transferIn->account_id : $movement->account_id;
+                $accountOut = $movement->transferOut ? $movement->transferOut->account_id : $movement->account_id;
+                $amountEnd = $movement->transferIn ? abs($movement->transferIn->amount) : abs($movement->amount);
+                $movement->amount = $movement->transferOut ? abs($movement->transferOut->amount) : abs($movement->amount);
+            }
+        }
+
         return [
             'movement' => $movement,
             'defaultAccount' => app('router')->getRoutes($url)->match(app('request')->create($url))->parameters()['account'] ?? null,
             'user' => $request->user(),
-            'accounts' => $accounts
+            'accounts' => $accounts,
+            'accountIn' => $accountIn,
+            'accountOut' => $accountOut,
+            'amountEnd' => $amountEnd,
         ];
     }
 
@@ -152,34 +171,85 @@ class MovementEditScreen extends Screen
                 return;
             }
 
-            $transfer_id = Category::where([
-                ['user_id', $request->user()->id],
-                ['group_id', env('GROUP_TRANSFER_ID')]
-            ])
-            ->first();
+            if($movement->id){
+                // if out move
+                if(!$movement->transfer_id) {
+                    $outData = [
+                        'account_id' => $request->input('movement.account_id'),
+                        'description' => $request->input('movement.description'),
+                        'amount' => abs((float)$request->input('movement.amount')) * -1,
+                        'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                        'date_purchase' => $request->input('movement.date_purchase'),
+                    ];
+                    $movement->fill($outData)->save();
 
-             // Create out move
-             $movement = Movement::create([
-                'account_id' => $request->input('movement.account_id'),
-                'category_id' => $transfer_id->id,
-                'description' => $request->input('movement.description'),
-                'amount' => abs((float)$request->input('movement.amount')) * -1,
-                'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
-                'date_purchase' => $request->input('movement.date_purchase'),
-                'user_id' => $request->user()->id,
-            ]);
+                    $inData = [
+                        'account_id' => $request->input('movement.account_end_id'),
+                        'description' => $request->input('movement.description'),
+                        'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
+                        'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                        'date_purchase' => $request->input('movement.date_purchase'),
+                    ];
+                    $outMovement = Movement::where([
+                        ['transfer_id', $movement->id]
+                    ])->first();
 
-            // Create in move
-            $movement = Movement::create([
-                'account_id' => $request->input('movement.account_end_id'),
-                'category_id' => $transfer_id->id,
-                'description' => $request->input('movement.description'),
-                'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
-                'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
-                'date_purchase' => $request->input('movement.date_purchase'),
-                'user_id' => $request->user()->id,
-                'transfer_id' => $movement->id
-            ]);
+                    $outMovement ->fill($inData)->save();
+                } else {
+                    $outData = [
+                        'account_id' => $request->input('movement.account_end_id'),
+                        'description' => $request->input('movement.description'),
+                        'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
+                        'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                        'date_purchase' => $request->input('movement.date_purchase'),
+                    ];
+                    $movement->fill($outData)->save();
+                    
+                    $inData = [
+                        'account_id' => $request->input('movement.account_id'),
+                        'description' => $request->input('movement.description'),
+                        'amount' => abs((float)$request->input('movement.amount')) * -1,
+                        'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                        'date_purchase' => $request->input('movement.date_purchase'),
+                    ];
+                    $inMovement = Movement::where([
+                        ['id', $movement->transfer_id]
+                    ])->first();
+
+                    $inMovement ->fill($inData)->save();
+                }
+            } else {
+
+                $transfer_id = Category::where([
+                    ['user_id', $request->user()->id],
+                    ['group_id', env('GROUP_TRANSFER_ID')]
+                ])
+                ->first();
+    
+                 // Create out move
+                 $movement = Movement::create([
+                    'account_id' => $request->input('movement.account_id'),
+                    'category_id' => $transfer_id->id,
+                    'description' => $request->input('movement.description'),
+                    'amount' => abs((float)$request->input('movement.amount')) * -1,
+                    'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                    'date_purchase' => $request->input('movement.date_purchase'),
+                    'user_id' => $request->user()->id,
+                ]);
+    
+                // Create in move
+                $movement = Movement::create([
+                    'account_id' => $request->input('movement.account_end_id'),
+                    'category_id' => $transfer_id->id,
+                    'description' => $request->input('movement.description'),
+                    'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
+                    'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                    'date_purchase' => $request->input('movement.date_purchase'),
+                    'user_id' => $request->user()->id,
+                    'transfer_id' => $movement->id
+                ]);
+            }
+
         }
         
 
