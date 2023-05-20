@@ -12,6 +12,7 @@ use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
 use App\Orchid\Layouts\Account\MovementsListLayout;
+use App\Orchid\Layouts\Account\MovementsFiltersLayout;
 
 use App\Models\Account;
 use App\Models\Movement;
@@ -38,6 +39,8 @@ class MovementsListScreen extends Screen
                 ['account_id', $account->id],
                 ['user_id', $request->user()->id],
             ])
+            ->filters()
+            ->filter($request)
             ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
             ->orderBy('date_purchase', 'desc')
             ->paginate(),
@@ -86,6 +89,7 @@ class MovementsListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            MovementsFiltersLayout::class,
             MovementsListLayout::class,
         ];
     }

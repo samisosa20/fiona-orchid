@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Filterable;
 
 use App\Models\User;
 use App\Models\Account;
@@ -12,7 +13,7 @@ use App\Models\Event;
 
 class Movement extends Model
 {
-    use HasFactory;
+    use HasFactory, Filterable;
 
     /**
      * The attributes that are mass assignable.
@@ -87,4 +88,26 @@ class Movement extends Model
         return $this->hasOne(Event::class, 'id', 'event_id');
     }
     
+    public function scopeFilter($query, $request)
+    {
+        $query->when($request->query('category'), function ($query) use ($request) {
+            $query->whereHas('category', function($query) use ($request){
+                $query->where('name', 'like', '%'.$request->query('category').'%');
+            });
+        })
+        ->when($request->query('amount'), function ($query) use ($request) {
+            $query->where('amount', '=', $request->query('amount'));
+        })
+        ->when($request->query('description'), function ($query) use ($request) {
+            $query->where('description', 'like', '%'.$request->query('description').'%');
+        })
+        ->when($request->query('date'), function ($query) use ($request) {
+            $query->whereDate('date_purchase', '=' , $request->query('date'));
+        })
+        ->when($request->query('event_id'), function ($query) use ($request) {
+            $query->whereHas('event', function($query) use ($request){
+                $query->where('id', '=', $request->query('event_id'));
+            });
+        });
+    }
 }
