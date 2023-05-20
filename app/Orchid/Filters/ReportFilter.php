@@ -50,14 +50,14 @@ class ReportFilter extends Filter
     public function display(): array
     {
         return [
+            Select::make('badge_id')
+            ->fromModel(Currency::class, 'code')
+            ->empty()
+            ->value($this->request->get('badge_id'))
+            ->title(__('Currency')),
             DateRange::make('date')
             ->value($this->request->get('date'))
             ->title(__('Range Date')),
-            Select::make('badge_id')
-                ->fromModel(Currency::class, 'code')
-                ->empty()
-                ->value($this->request->get('badge_id'))
-                ->title(__('Currency')),
         ];
     }
 
