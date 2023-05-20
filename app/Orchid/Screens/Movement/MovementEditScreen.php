@@ -151,7 +151,7 @@ class MovementEditScreen extends Screen
             return;
         }
 
-        if($request->input('movement')['type'] == 0) {
+        if($request->input('movement')['type'] == 'movement') {
             $movement->fill($request->collect('movement')->toArray())
                 ->fill(['user_id' => $request->user()->id])
                 ->save();
