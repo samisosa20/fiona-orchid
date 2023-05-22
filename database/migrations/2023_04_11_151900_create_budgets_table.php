@@ -24,7 +24,11 @@ return new class extends Migration
             ->references('id')
             ->on('currencies')
             ->onUpdate('cascade');
-            $table->integer('month');
+            $table->unsignedBigInteger('period_id');
+            $table->foreign('period_id')
+            ->references('id')
+            ->on('periods')
+            ->onUpdate('cascade');
             $table->integer('year');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')

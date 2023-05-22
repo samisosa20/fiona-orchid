@@ -34,6 +34,8 @@ use App\Orchid\Screens\Category\CategoryEditScreen;
 use App\Orchid\Screens\Report\ReportScreen;
 use App\Orchid\Screens\Payment\PaymentListScreen;
 use App\Orchid\Screens\Payment\PaymentEditScreen;
+use App\Orchid\Screens\Budget\BudgetListScreen;
+use App\Orchid\Screens\Budget\BudgetEditScreen;
 
 
 
@@ -237,3 +239,24 @@ Route::screen('payments/create', PaymentEditScreen::class)
 ->breadcrumbs(fn (Trail $trail) => $trail
     ->parent('platform.payments')
     ->push(__('Create'), route('platform.payments.create')));
+
+// Platform > Budget
+Route::screen('/budgets', BudgetListScreen::class)
+    ->name('platform.budgets')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Budgets'), route('platform.budgets')));
+
+// Platform > Budget > Edit
+Route::screen('budgets/{year}/edit', BudgetEditScreen::class)
+->name('platform.budgets.edit')
+->breadcrumbs(fn (Trail $trail, $year) => $trail
+    ->parent('platform.budgets')
+    ->push($year, route('platform.budgets.edit', $year)));
+
+// Platform > Budget > Create
+Route::screen('budgets/create', BudgetEditScreen::class)
+->name('platform.budgets.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.budgets')
+    ->push(__('Create'), route('platform.budgets.create')));
