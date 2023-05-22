@@ -52,6 +52,7 @@ class ReportScreen extends Screen
             ],
             'group_expensive' => $data['group_expensive'],
             'list_expensives' => $data['list_expensives'],
+            'list_incomes' => $data['incomes'],
             'credit_carts' => $data['credit_carts'],
             'metrics' => [
                 'open_balance'    => number_format($data['open_close']->open_balance, 2, ',', '.'),
@@ -122,9 +123,10 @@ class ReportScreen extends Screen
             ChartLineLayout::make('balances', __('Balance')),
             Layout::columns([
                 Layout::view('layouts.reports.group'),
-                Layout::view('layouts.reports.expensives'),
+                Layout::view('layouts.reports.incomes'),
             ]),
             Layout::columns([
+                Layout::view('layouts.reports.expensives'),
                 Layout::view('layouts.reports.creditcard'),
             ]),
         ];
