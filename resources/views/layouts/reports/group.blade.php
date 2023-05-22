@@ -1,9 +1,10 @@
-<div class="p-4 bg-white rounded shadow-sm h-100 d-flex flex-column">
-    <small class="text-muted d-block mb-1">{{__('Expensive by group')}}</small>
-    @foreach ($group_expensive as $group)
-    @php
+<div class="mb-3">
+    <div class="p-4 bg-white rounded shadow-sm h-100 d-flex flex-column">
+        <small class="text-muted d-block mb-1">{{__('Expensive by group')}}</small>
+        @foreach ($group_expensive as $group)
+        @php
         $amount = is_array($group) ? $group['amount'] : $group->amount;
-    @endphp
+        @endphp
         <div class="py-4 px-3 border-bottom">
             <p class="text-black h5 fw-normal mb-0">
                 {{ is_array($group) ? $group['name'] : $group->name }}
@@ -12,5 +13,6 @@
                 {{ number_format($amount, 2, ',', '.') }} {{ is_array($group) ? "({$group['porcent']}%)" : (isset($group->porcent) ? "({$group->porcent}%)" : '') }}
             </p>
         </div>
-    @endforeach
+        @endforeach
+    </div>
 </div>

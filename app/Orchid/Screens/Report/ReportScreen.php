@@ -27,7 +27,7 @@ class ReportScreen extends Screen
     public function query(Request $request): iterable
     {
         $data = ReportController::report($request);
-        //dd($data, $data['main_expensive']->toArray());
+
         return [
             'incomes' => [
                 [
@@ -52,6 +52,7 @@ class ReportScreen extends Screen
             ],
             'group_expensive' => $data['group_expensive'],
             'list_expensives' => $data['list_expensives'],
+            'credit_carts' => $data['credit_carts'],
             'metrics' => [
                 'open_balance'    => number_format($data['open_close']->open_balance, 2, ',', '.'),
                 'income' => number_format($data['open_close']->income, 2, ',', '.'),
@@ -122,6 +123,9 @@ class ReportScreen extends Screen
             Layout::columns([
                 Layout::view('layouts.reports.group'),
                 Layout::view('layouts.reports.expensives'),
+            ]),
+            Layout::columns([
+                Layout::view('layouts.reports.creditcard'),
             ]),
         ];
     }

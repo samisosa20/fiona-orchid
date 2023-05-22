@@ -50,7 +50,9 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make(__('Categories'))
                     ->icon('bag')
                     ->route('platform.categories'),
-                    Menu::make(__('Payments'))->icon('heart'),
+                    Menu::make(__('Payments'))
+                    ->icon('heart')
+                    ->route('platform.payments'),
                 ])
                 ->title(__('Settings')),
 

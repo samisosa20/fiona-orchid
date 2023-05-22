@@ -43,6 +43,7 @@ class MovementTypeLayout extends Rows
                 ->format24hr()
                 ->required()
                 ->enableTime()
+                ->format('Y-m-d H:i')
                 ->value(now())
                 ->title(__('Date purchase')),
         ];

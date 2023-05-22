@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Orchid\Screens\Account;
+namespace App\Orchid\Screens\Payment;
 
 use Illuminate\Http\Request;
 use Orchid\Screen\Action;
@@ -11,28 +11,29 @@ use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-use App\Models\Account;
+use App\Models\PlannedPayment;
 
-use App\Orchid\Layouts\Account\AccountEditLayout;
+use App\Orchid\Layouts\Payment\PaymentEditLayout;
 
-class AccountEditScreen extends Screen
+class PaymentEditScreen extends Screen
 {
     /**
-     * @var Account
+     * @var PlannedPayment
      */
-    public $account;
+    public $payment;
 
     /**
      * Fetch data to be displayed on the screen.
      *
-     * @param Account $account
+     * @param PlannedPayment $payment
      *
      * @return array
      */
-    public function query(Account $account): iterable
+    public function query(PlannedPayment $payment, Request $request): iterable
     {
         return [
-            'account' => $account,
+            'payment' => $payment,
+            'user' => $request->user(),
         ];
     }
 
@@ -43,7 +44,7 @@ class AccountEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return $this->account->exists ? 'Edit Account' : 'Create Account';
+        return $this->payment->exist ? 'Edit Payment' : 'Create Payment';
     }
 
     /**
@@ -53,7 +54,7 @@ class AccountEditScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Details such as name, email and password';
+        return 'Details of your payment planned';
     }
 
     /**
@@ -67,9 +68,9 @@ class AccountEditScreen extends Screen
 
             Button::make(__('Remove'))
                 ->icon('trash')
-                ->confirm(__('Once the account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.'))
+                ->confirm(__('Once the Payment is deleted, all of its resources and data will be permanently deleted. Before deleting your Event, please download any data or information that you wish to retain.'))
                 ->method('remove')
-                ->canSee($this->account->exists),
+                ->canSee(!!$this->payment->id),
 
             Button::make(__('Save'))
                 ->icon('check')
@@ -84,42 +85,42 @@ class AccountEditScreen extends Screen
     {
         return [
 
-            Layout::block(AccountEditLayout::class)
+            Layout::block(PaymentEditLayout::class)
 
         ];
     }
 
     /**
-     * @param Account    $account
+     * @param PlannedPayment    $payment
      * @param Request $request
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function save(Account $account, Request $request)
+    public function save(PlannedPayment $payment, Request $request)
     {
-        $account->fill($request->collect('account')->toArray())
+        $payment->fill($request->collect('payment')->toArray())
             ->fill(['user_id' => $request->user()->id])
             ->save();
 
-        Toast::info(__('Account was saved.'));
+        Toast::info(__('Payment was saved.'));
 
-        return redirect()->route('platform.accounts');
+        return redirect()->route('platform.payments');
     }
 
     /**
-     * @param Account $user
+     * @param PlannedPayment $user
      *
      * @throws \Exception
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function remove(Account $account)
+    public function remove(PlannedPayment $payment)
     {
-        $account->delete();
+        $payment->delete();
 
-        Toast::info(__('Account was removed'));
+        Toast::info(__('Payment was removed'));
 
-        return redirect()->route('platform.accounts');
+        return redirect()->route('platform.payments');
     }
 
 }

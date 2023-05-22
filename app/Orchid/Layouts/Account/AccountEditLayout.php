@@ -11,8 +11,7 @@ use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Fields\Select;
 
 use App\Models\Currency;
-
-use App\Controllers\Types\CommonTypesController;
+use App\Models\TypeAccount;
 
 class AccountEditLayout extends Rows
 {
@@ -36,14 +35,12 @@ class AccountEditLayout extends Rows
                 ->max(255)
                 ->title(__('Description'))
                 ->placeholder(__('Description')),
-
-            Input::make('account.init_amount')
-                ->type('number')
-                ->min(0)
-                ->value(0)
-                ->step(0.01)
+                
+            Select::make('account.type_id')
+                ->fromModel(TypeAccount::class, 'name')
+                ->empty()
                 ->required()
-                ->title(__('Initial Amount')),
+                ->title(__('Type')),
 
             Select::make('account.badge_id')
                 ->fromModel(Currency::class, 'code')
@@ -51,11 +48,20 @@ class AccountEditLayout extends Rows
                 ->required()
                 ->title(__('Currency')),
 
-            Select::make('account.type')
-                ->options(CommonTypesController::listType())
-                ->empty()
+            Input::make('account.init_amount')
+                ->type('number')
+                ->min(0)
+                ->value(0)
+                ->step(0.01)
                 ->required()
-                ->title(__('Type')),
+                ->title(__('Current Amount')),
+            
+            Input::make('account.limit')
+                ->type('number')
+                ->min(0)
+                ->value(0)
+                ->step(0.01)
+                ->title(__('Credit card limit')),
         ];
     }
 }

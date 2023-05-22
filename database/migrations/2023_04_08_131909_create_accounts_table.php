@@ -21,7 +21,12 @@ return new class extends Migration
             ->on('currencies')
             ->onUpdate('cascade');
             $table->decimal('init_amount', $precision = 15, $scale = 2);
-            $table->string('type', 50);
+            $table->decimal('limit', $precision = 15, $scale = 2);
+            $table->unsignedBigInteger('type_id');
+            $table->foreign('type_id')
+            ->references('id')
+            ->on('type_accounts')
+            ->onUpdate('cascade');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')
             ->references('id')

@@ -89,7 +89,7 @@ class AccountListLayout extends Table
             TD::make('type', __('Type'))
                 ->cantHide()
                 ->sort()
-                ->render(fn (Account $account) => $account->type),
+                ->render(fn (Account $account) => $account->type->name),
             
             TD::make('status', __('Estado'))
                 ->sort()

@@ -32,6 +32,8 @@ use App\Orchid\Screens\Movement\MovementEditScreen;
 use App\Orchid\Screens\Category\CategoryListScreen;
 use App\Orchid\Screens\Category\CategoryEditScreen;
 use App\Orchid\Screens\Report\ReportScreen;
+use App\Orchid\Screens\Payment\PaymentListScreen;
+use App\Orchid\Screens\Payment\PaymentEditScreen;
 
 
 
@@ -214,3 +216,24 @@ Route::screen('categories/create', CategoryEditScreen::class)
 ->breadcrumbs(fn (Trail $trail) => $trail
     ->parent('platform.categories')
     ->push(__('Create'), route('platform.categories.create')));
+
+// Platform > Payment
+Route::screen('/payments', PaymentListScreen::class)
+    ->name('platform.payments')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Payments'), route('platform.payments')));
+
+// Platform > Payment > Edit
+Route::screen('payments/{payment}/edit', PaymentEditScreen::class)
+->name('platform.payments.edit')
+->breadcrumbs(fn (Trail $trail, $payment) => $trail
+    ->parent('platform.payments')
+    ->push(__('Edit'), route('platform.payments.edit', $payment)));
+
+// Platform > Payment > Create
+Route::screen('payments/create', PaymentEditScreen::class)
+->name('platform.payments.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.payments')
+    ->push(__('Create'), route('platform.payments.create')));

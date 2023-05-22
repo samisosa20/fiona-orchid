@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use App\Models\Movement;
 use App\Models\Currency;
+use App\Models\TypeAccount;
 
 class Account extends Model
 {
@@ -25,7 +25,8 @@ class Account extends Model
         'description',
         'badge_id',
         'init_amount',
-        'type',
+        'limit',
+        'type_id',
         'user_id',
     ];
 
@@ -97,5 +98,10 @@ class Account extends Model
     public function currency()
     {
         return $this->hasOne(Currency::class, 'id', 'badge_id');
+    }
+
+    public function type()
+    {
+        return $this->hasOne(TypeAccount::class, 'id', 'type_id');
     }
 }

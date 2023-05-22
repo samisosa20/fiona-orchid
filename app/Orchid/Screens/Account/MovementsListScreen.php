@@ -17,6 +17,8 @@ use App\Orchid\Layouts\Account\MovementsFiltersLayout;
 use App\Models\Account;
 use App\Models\Movement;
 
+use App\Controllers\Reports\ReportController;
+use App\Orchid\Layouts\Reports\ChartLineLayout;
 class MovementsListScreen extends Screen
 {
     /**
@@ -33,7 +35,16 @@ class MovementsListScreen extends Screen
      */
     public function query(Account $account, Request $request): iterable
     {
+        $balance = ReportController::balanceByAccount($request, $account->id);
+
         return [
+            'balancesAccount' => [
+                [
+                    'name'   => 'Balance',
+                    'values' => array_map(fn ($v) => $v->amount, $balance),
+                    'labels' => array_map(fn ($v) => $v->date, $balance),
+                ]
+            ],
             'account' => $account,
             'movements' => Movement::where([
                 ['account_id', $account->id],
@@ -64,7 +75,7 @@ class MovementsListScreen extends Screen
      */
     public function description(): ?string
     {
-        return $this->account->type;
+        return $this->account->type->name;
     }
 
     /**
@@ -89,6 +100,7 @@ class MovementsListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            ChartLineLayout::make('balancesAccount', __('Balance')),
             MovementsFiltersLayout::class,
             MovementsListLayout::class,
         ];

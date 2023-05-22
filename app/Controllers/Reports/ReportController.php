@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
 use App\Models\Movement;
+use App\Models\Account;
 use App\Models\Category;
 
 class ReportController extends Controller
@@ -178,7 +179,7 @@ class ReportController extends Controller
             $savingArray = [
                 "name" => "Ahorros",
                 "amount" => $saving < 0 ? 0 : $saving,
-                "porcent" => $saving < 0 || $income === 0 ? 0.00 : round(abs($saving) / $income * 100, 2)
+                "porcent" => $saving < 0 || $income === 0.0 ? 0.00 : round(abs($saving) / $income * 100, 2)
             ];
 
             $group_expensive->push($savingArray);
@@ -199,19 +200,47 @@ class ReportController extends Controller
                 $acumAux += $prevAmount;
             }
 
+            $credit_carts = Account::where([
+                ['user_id', $user->id],
+                ['badge_id', $currency],
+            ])
+            ->withBalance()
+            ->whereHas('type', fn ($query) => $query->where('name', '=', 'Credit Card'))
+            ->get();
+
             return [
                 'open_close' => $close_open,
                 'incomes' => $incomes,
                 'main_expensive' => $main_expensive,
                 'group_expensive' => $group_expensive,
                 'list_expensives' => $expensives,
-                'balances' => $balance
+                'balances' => $balance,
+                'credit_carts' => $credit_carts,
             ];
         } catch(\Illuminate\Database\QueryException $ex){
             return [
                 'message' => 'Datos no obtenidos',
-                'detail' => $ex//->errorInfo[0]
+                'detail' => $ex->errorInfo[0]
             ];
         }
+    }
+
+    static function balanceByAccount(Request $request, int $account_id)
+    {
+        $user = $request->user();
+        $currency = $user->badge_id;
+        $end_date = Carbon::now()->format('Y-m-d');
+        $init_date = Carbon::now()->subDays(15)->format('Y-m-d');
+
+        $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @account_id := '.$account_id.' a) alias, report_balance_account');
+
+        $acumAux = 0;
+        foreach ($balance as $key => &$value) {
+            $prevAmount = $value->amount;
+            $value->amount += $acumAux;
+            $acumAux += $prevAmount;
+        }
+
+        return $balance;
     }
 }
