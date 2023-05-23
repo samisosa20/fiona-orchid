@@ -5,6 +5,7 @@ namespace App\Orchid\Layouts\Reports;
 use App\Orchid\Filters\ReportFilter;
 use Orchid\Filters\Filter;
 use Orchid\Screen\Layouts\Selection;
+use Orchid\Crud\Filters\DefaultWhere;
 
 class ReportFiltersLayout extends Selection
 {

@@ -11,6 +11,7 @@ use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\DateRange;
 
 use App\Models\Currency;
+use App\Models\User;
 
 class ReportFilter extends Filter
 {
@@ -39,9 +40,7 @@ class ReportFilter extends Filter
      */
     public function run(Builder $builder): Builder
     {
-        return $builder->whereHas('roles', function (Builder $query) {
-            $query->where('slug', $this->request->get('role'));
-        });
+        return $builder->where('badge_id', '=', 1);
     }
 
     /**
@@ -52,8 +51,7 @@ class ReportFilter extends Filter
         return [
             Select::make('badge_id')
             ->fromModel(Currency::class, 'code')
-            ->empty()
-            ->value($this->request->get('badge_id'))
+            ->value($this->request->get('badge_id') ?? $this->request->user()->badge_id)
             ->title(__('Currency')),
             DateRange::make('date')
             ->value($this->request->get('date'))
@@ -66,6 +64,6 @@ class ReportFilter extends Filter
      */
     public function value(): string
     {
-        return $this->name().': '.Currency::where('id', $this->request->get('badge_id'))->first()->code;
+        return $this->name().': '. Currency::where('id', $this->request->get('badge_id'))->first()->code;
     }
 }

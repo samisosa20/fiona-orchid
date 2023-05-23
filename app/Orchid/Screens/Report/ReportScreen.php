@@ -116,11 +116,7 @@ class ReportScreen extends Screen
                 'Expensives' => 'metrics.expensive',
                 'End Balance' => 'metrics.utility',
             ]),
-            Layout::columns([
-                ChartPieLayout::make('incomes', __('Incomes')),
-                ChartPieLayout::make('expensives', __('Main Expensives')),
-            ]),
-            ChartLineLayout::make('balances', __('Balance')),
+            Layout::view('layouts.reports.charts'),
             Layout::columns([
                 Layout::view('layouts.reports.group'),
                 Layout::view('layouts.reports.incomes'),

@@ -100,7 +100,7 @@ class MovementsListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            ChartLineLayout::make('balancesAccount', __('Balance')),
+            Layout::view('layouts.account.charts'),
             MovementsFiltersLayout::class,
             MovementsListLayout::class,
         ];

@@ -41,7 +41,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->route('platform.events'),
 
             Menu::make(__('Budget'))
-                ->icon('book-open')
+                ->icon('flag')
                 ->route('platform.budgets'),
             
             Menu::make(__('Heritages'))
