@@ -36,6 +36,7 @@ use App\Orchid\Screens\Payment\PaymentListScreen;
 use App\Orchid\Screens\Payment\PaymentEditScreen;
 use App\Orchid\Screens\Budget\BudgetListScreen;
 use App\Orchid\Screens\Budget\BudgetEditScreen;
+use App\Orchid\Screens\Budget\BudgetReportScreen;
 
 
 
@@ -260,3 +261,10 @@ Route::screen('budgets/create', BudgetEditScreen::class)
 ->breadcrumbs(fn (Trail $trail) => $trail
     ->parent('platform.budgets')
     ->push(__('Create'), route('platform.budgets.create')));
+
+// Platform > Budget > Report
+Route::screen('report/budget', BudgetReportScreen::class)
+->name('platform.budgets.report')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.index')
+    ->push(__('Report'), route('platform.budgets.report')));
