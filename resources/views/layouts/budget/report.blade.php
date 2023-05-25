@@ -138,27 +138,42 @@
                             }
                         }
                     @endphp
-                    @foreach ($sumsMove as $keyMove => $move)
-                        @php
-                            $porce = 0;
-                            $budget = 0;
-                            $color = 'success';
-                            if (isset($sumsBudget[$keyMove])) {
-                                $porce = round((abs($move) / $sumsBudget[$keyMove]) * 100, 2);
-                                $budget = $sumsBudget[$keyMove];
-                                $color = $porce > 90 ? 'danger' : ($porce > 65 ? 'warning' : 'success');
-                            }
-                        @endphp
+                    @if (count($sumsMove) > 0)
+                        @foreach ($sumsMove as $keyMove => $move)
+                            @php
+                                $porce = 0;
+                                $budget = 0;
+                                $color = 'success';
+                                if (isset($sumsBudget[$keyMove])) {
+                                    $porce = round((abs($move) / $sumsBudget[$keyMove]) * 100, 2);
+                                    $budget = $sumsBudget[$keyMove];
+                                    $color = $porce > 90 ? 'danger' : ($porce > 65 ? 'warning' : 'success');
+                                } elseif (abs($move) > 0) {
+                                    $porce = 100;
+                                    $color = 'danger';
+                                }
+                            @endphp
+                            <div>
+                                <small>{{ number_format(abs($move ?? 0)) }}</small>
+                                <small class="float-end">{{ number_format($budget) }} {{ $keyMove }}</small>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-{{$color}} rounded fw-bold" role="progressbar"
+                                    aria-valuenow="{{ $porce }}" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: {{ $porce }}%">{{ $porce }}%</div>
+                            </div>
+                        @endforeach
+                    @else
                         <div>
-                            <small>{{ number_format(abs($move ?? 0)) }}</small>
-                            <small class="float-end">{{ number_format($budget) }} {{ $keyMove }}</small>
+                            <small>{{ number_format(abs(0)) }}</small>
+                            <small class="float-end">{{ number_format(0) }}</small>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar bg-{{$color}} rounded fw-bold" role="progressbar"
-                                aria-valuenow="{{ $porce }}" aria-valuemin="0" aria-valuemax="100"
-                                style="width: {{ $porce }}%">{{ $porce }}%</div>
+                            <div class="progress-bar bg-danger rounded fw-bold" role="progressbar"
+                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                style="width: 0%">0%</div>
                         </div>
-                    @endforeach
+                    @endif
                     @foreach ($category['sub_categories'] as $expensive)
                         <div class="collapse" id="collapseExpensive{{ $key }}">
                             <div class="py-4 px-3 border-bottom">

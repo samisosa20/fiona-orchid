@@ -106,9 +106,20 @@ class BudgetEditScreen extends Screen
      */
     public function save($year, Request $request)
     {
-        Budget::create(array_merge($request->collect('budget')->toArray(), ['user_id' => $request->user()->id]));
+        $isExist = Budget::where([
+            ['category_id', $request->input('budget.category_id')],
+            ['badge_id', $request->input('budget.badge_id')],
+            ['year', $request->input('budget.year')],
+            ['user_id', $request->user()->id],
+        ])->first();
 
-        Toast::info(__('Budget was saved.'));
+        if(!$isExist){
+            Budget::create(array_merge($request->collect('budget')->toArray(), ['user_id' => $request->user()->id]));
+            Toast::info(__('Budget was saved.'));
+        } else {
+            Toast::error(__('Budget already exist.'));
+        }
+
 
     }
 

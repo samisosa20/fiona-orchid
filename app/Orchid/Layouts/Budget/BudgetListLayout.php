@@ -35,23 +35,12 @@ class BudgetListLayout extends Table
     public function columns(): array
     {
         return [
-            TD::make(__('Actions'))
-                ->align(TD::ALIGN_CENTER)
-                ->width('100px')
-                ->canSee(!$this->query['year'])
-                ->render(fn (Budget $budget) => DropDown::make()
-                    ->icon('options-vertical')
-                    ->list([
-                        Link::make(__('Edit'))
-                            ->route('platform.budgets.edit', $budget->year)
-                            ->icon('pencil'),
-                    ])),
-
             TD::make('year', __('Year'))
                 ->sort()
                 ->cantHide()
                 ->canSee(!$this->query['year'])
-                ->render(fn (Budget $budget) => $budget->year),
+                ->render(fn (Budget $budget) => Link::make((string)$budget->year)
+                ->route('platform.budgets.edit', $budget->year)),
             
             TD::make('category_id', __('Category'))
                 ->sort()

@@ -70,9 +70,10 @@ class BudgetReportScreen extends Screen
                 $sub_category->movements = $movements;
                 array_push($movements_main, $movements);
             }
+
             $movements = Movement::where([
                     ['movements.user_id', $request->user()->id],
-                    ['category_id', $sub_category->id],
+                    ['category_id', $category->id],
                 ])
                 ->whereYear('date_purchase', now()->format('Y'))
                 ->selectRaw('code, sum(amount) as amount')
@@ -81,6 +82,20 @@ class BudgetReportScreen extends Screen
                 ->groupBy('code')
                 ->get();
 
+            $budgets = Budget::where([
+                ['user_id', $request->user()->id],
+                ['category_id', $category->id],
+                ['year', now()->format('Y')],
+                ])
+                ->get();
+                
+            foreach ($budgets as &$budget) {
+                if($budget->period->name === 'Monthly') {
+                    $budget->amount = $budget->amount * 12;
+                }
+            }
+
+            array_push($budgets_main, $budgets);
             array_push($movements_main, $movements);
 
             $category->sub_categories = $sub_categories;

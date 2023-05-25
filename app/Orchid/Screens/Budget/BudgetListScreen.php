@@ -28,7 +28,7 @@ class BudgetListScreen extends Screen
         $budgets = Budget::where([
             ['user_id', $request->user()->id]
         ])
-        ->selectRaw('year, GROUP_CONCAT(currencies.code SEPARATOR ", ") as currency')
+        ->selectRaw('year, GROUP_CONCAT(distinct(currencies.code) SEPARATOR ", ") as currency')
         ->join('currencies', 'currencies.id', 'budgets.badge_id')
         ->groupBy('year')
         ->paginate();
