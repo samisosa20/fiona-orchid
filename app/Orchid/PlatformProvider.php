@@ -39,6 +39,10 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make(__('Events'))
                 ->icon('hourglass')
                 ->route('platform.events'),
+            
+            Menu::make(__('Investments'))
+                ->icon('money')
+                ->route('platform.investments'),
 
             Menu::make(__('Budget'))
                 ->icon('flag')

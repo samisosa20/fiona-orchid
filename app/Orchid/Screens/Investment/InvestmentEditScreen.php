@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Orchid\Screens\Event;
+namespace App\Orchid\Screens\Investment;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -13,28 +13,28 @@ use Orchid\Support\Color;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-use App\Models\Event;
+use App\Models\Investment;
 
-use App\Orchid\Layouts\Event\EventEditLayout;
+use App\Orchid\Layouts\Investment\InvestmentEditLayout;
 
-class EventEditScreen extends Screen
+class InvestmentEditScreen extends Screen
 {
     /**
-     * @var Event
+     * @var Investment
      */
-    public $event;
+    public $investment;
 
     /**
      * Fetch data to be displayed on the screen.
      *
-     * @param Event $event
+     * @param Investment $investment
      *
      * @return array
      */
-    public function query(Event $event): iterable
+    public function query(Investment $investment): iterable
     {
         return [
-            'event' => $event,
+            'investment' => $investment,
         ];
     }
 
@@ -45,7 +45,7 @@ class EventEditScreen extends Screen
      */
     public function name(): ?string
     {
-        return $this->event->exist ? 'Edit Event' : 'Create Event';
+        return $this->investment->exist ? 'Edit Investment' : 'Create Investment';
     }
 
     /**
@@ -69,9 +69,9 @@ class EventEditScreen extends Screen
 
             Button::make(__('Remove'))
                 ->icon('trash')
-                ->confirm(__('Once the Event is deleted, all of its resources and data will be permanently deleted. Before deleting your Event, please download any data or information that you wish to retain.'))
+                ->confirm(__('Once the Investment is deleted, all of its resources and data will be permanently deleted. Before deleting your investment, please download any data or information that you wish to retain.'))
                 ->method('remove')
-                ->canSee(!!$this->event->id),
+                ->canSee(!!$this->investment->id),
 
             Button::make(__('Save'))
                 ->icon('check')
@@ -86,42 +86,42 @@ class EventEditScreen extends Screen
     {
         return [
 
-            Layout::block(EventEditLayout::class)
+            Layout::block(InvestmentEditLayout::class)
 
         ];
     }
 
     /**
-     * @param Event    $event
+     * @param Investment    $investment
      * @param Request $request
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function save(Event $event, Request $request)
+    public function save(Investment $investment, Request $request)
     {
-        $event->fill($request->collect('event')->toArray())
+        $investment->fill($request->collect('investment')->toArray())
             ->fill(['user_id' => $request->user()->id])
             ->save();
 
-        Toast::info(__('Event was saved.'));
+        Toast::info(__('Investment was saved.'));
 
-        return redirect()->route('platform.events');
+        return redirect()->route('platform.investments');
     }
 
     /**
-     * @param Event $user
+     * @param Investment $user
      *
      * @throws \Exception
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function remove(Event $event)
+    public function remove(Investment $investment)
     {
-        $event->delete();
+        $investment->delete();
 
-        Toast::info(__('Event was removed'));
+        Toast::info(__('Investment was removed'));
 
-        return redirect()->route('platform.events');
+        return redirect()->route('platform.investments');
     }
 
 }

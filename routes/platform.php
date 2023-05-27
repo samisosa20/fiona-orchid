@@ -37,6 +37,8 @@ use App\Orchid\Screens\Payment\PaymentEditScreen;
 use App\Orchid\Screens\Budget\BudgetListScreen;
 use App\Orchid\Screens\Budget\BudgetEditScreen;
 use App\Orchid\Screens\Budget\BudgetReportScreen;
+use App\Orchid\Screens\Investment\InvestmentListScreen;
+use App\Orchid\Screens\Investment\InvestmentEditScreen;
 
 
 
@@ -268,3 +270,24 @@ Route::screen('report/budget', BudgetReportScreen::class)
 ->breadcrumbs(fn (Trail $trail) => $trail
     ->parent('platform.index')
     ->push(__('Report'), route('platform.budgets.report')));
+
+// Platform > Investment
+Route::screen('/investments', InvestmentListScreen::class)
+->name('platform.investments')
+->breadcrumbs(fn (Trail $trail) => $trail
+    ->parent('platform.index')
+    ->push(__('Investments'), route('platform.investments')));
+
+// Platform > Investment > Edit
+Route::screen('investments/{investment}/edit', InvestmentEditScreen::class)
+->name('platform.investments.edit')
+->breadcrumbs(fn (Trail $trail, $investment) => $trail
+->parent('platform.investments')
+->push($investment->name, route('platform.investments.edit', $investment)));
+
+// Platform > Investment > Create
+Route::screen('investments/create', InvestmentEditScreen::class)
+->name('platform.investments.create')
+->breadcrumbs(fn (Trail $trail) => $trail
+->parent('platform.investments')
+->push(__('Create'), route('platform.investments.create')));

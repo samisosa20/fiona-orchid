@@ -228,11 +228,10 @@ class ReportController extends Controller
     static function balanceByAccount(Request $request, int $account_id)
     {
         $user = $request->user();
-        $currency = $user->badge_id;
         $end_date = Carbon::now()->format('Y-m-d');
         $init_date = Carbon::now()->subDays(15)->format('Y-m-d');
 
-        $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @account_id := '.$account_id.' a) alias, report_balance_account');
+        $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @account_id := '.$account_id.' a) alias, report_balance_account');
 
         $acumAux = 0;
         foreach ($balance as $key => &$value) {
