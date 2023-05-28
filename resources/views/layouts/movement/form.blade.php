@@ -39,6 +39,14 @@
                 ->value($movement->event_id)
                 ->title(__('Event'))
             !!}
+            {!! Orchid\Screen\Fields\Select::make('movement[investment_id]')
+                ->fromModel(App\Models\Investment::where([
+                    ['user_id', $user->id],
+                ]), 'name')
+                ->empty()
+                ->value($movement->investment_id)
+                ->title(__('Investment'))
+            !!}
         </div>
         <div id="container-amount-end" class="mb-3 d-none">
         {!! Orchid\Screen\Fields\Input::make('movement[amount_end]')

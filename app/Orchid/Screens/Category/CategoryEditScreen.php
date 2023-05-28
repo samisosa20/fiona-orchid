@@ -75,7 +75,7 @@ class CategoryEditScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Details such as name, email and password';
+        return '';
     }
 
     /**

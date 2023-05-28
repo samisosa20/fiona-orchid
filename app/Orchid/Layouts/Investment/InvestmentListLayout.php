@@ -64,17 +64,22 @@ class InvestmentListLayout extends Table
             TD::make('init_amount', __('Start Amount'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Investment $investment) => number_format($investment->init_amount)),
+                ->render(fn (Investment $investment) => number_format($investment->init_amount, 2, ',', '.')),
 
             TD::make('end_amount', __('Current Amount'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (Investment $investment) => number_format($investment->end_amount)),
+                ->render(fn (Investment $investment) => number_format($investment->end_amount, 2, ',', '.')),
             
-            TD::make('profitability', __('Profitability'))
+            TD::make('valuation', __('Investment Valuation'))
                 ->sort()
                 ->cantHide()
                 ->render(fn (Investment $investment) => round(($investment->end_amount - $investment->init_amount) / $investment->init_amount * 100, 2).'%'),
+            
+            TD::make('profit', __('Profits'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (Investment $investment) => number_format($investment->balance, 2, ',', '.')),
 
             TD::make('badge_id', __('Currency'))
                 ->sort()

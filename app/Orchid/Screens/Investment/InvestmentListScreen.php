@@ -29,22 +29,37 @@ class InvestmentListScreen extends Screen
             ['user_id', $request->user()->id]
         ])
         ->paginate();
-        
-        /* foreach ($events as &$event) {
-            $event->balance = Movement:: where([
-                ['movements.event_id', $event->id],
-            ])
-            ->selectRaw('currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
-            ->join('accounts', 'accounts.id', 'movements.account_id')
-            ->join('currencies', 'currencies.id', 'accounts.badge_id')
-            ->groupByRaw('currencies.code, badge_id')
-            ->get();
+
+        $balances = Investment::where([
+            ['user_id', $request->user()->id]
+        ])
+        ->selectRaw('currencies.code as currency, badge_id, sum(end_amount - init_amount) as valuation, sum(end_amount) as amount')
+        ->join('currencies', 'currencies.id', 'investments.badge_id')
+        ->groupByRaw('currencies.code, badge_id')
+        ->get();
+
+        foreach ($balances as &$value) {
+            $value->profit = Movement:: where([
+                ['movements.user_id', $request->user()->id],
+                ['currencies.id', $value->badge_id],
+                ])
+                ->whereNotNull('investment_id')
+                ->join('accounts', 'accounts.id', 'movements.account_id')
+                ->join('currencies', 'currencies.id', 'accounts.badge_id')
+                ->sum('amount') * 1;
         }
- */
+        
+        foreach ($investments as &$investment) {
+            $investment->balance = Movement:: where([
+                ['movements.investment_id', $investment->id],
+            ])
+            ->sum('amount') * 1;
+        }
 
         return [
             'investments' => $investments,
-            'movements' => []
+            'movements' => [],
+            'balances' => $balances
         ];
     }
 
@@ -90,6 +105,7 @@ class InvestmentListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::view('layouts.investment.balance'),
             InvestmentListLayout::class,
             Layout::modal('movementsModal', [Layout::view('layouts.movement.list')])
                 ->async('asyncGetMovements')
@@ -100,14 +116,14 @@ class InvestmentListScreen extends Screen
     }
 
 /**
-     * @param Event $event
+     * @param Investment $investment
      *
      * @return array
      */
-    public function asyncGetMovements(Event $event): iterable
+    public function asyncGetMovements(Investment $investment): iterable
     {
         return [
-            'movements' => $event->movements,
+            'movements' => $investment->movements,
         ];
     }
 
@@ -116,8 +132,8 @@ class InvestmentListScreen extends Screen
      */
     public function activate(Request $request): void
     {
-        Event::onlyTrashed()->find($request->get('id'))->restore();
+        Investment::onlyTrashed()->find($request->get('id'))->restore();
 
-        Toast::success(__('The Event was activated.'));
+        Toast::success(__('The Investment was activated.'));
     }
 }

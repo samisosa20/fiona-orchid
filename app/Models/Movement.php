@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Investment;
 
 class Movement extends Model
 {
@@ -29,6 +30,7 @@ class Movement extends Model
         'date_purchase',
         'transfer_id',
         'event_id',
+        'investment_id',
         'user_id',
     ];
 
@@ -43,6 +45,7 @@ class Movement extends Model
         'category_id',
         'transfer_id',
         'event_id',
+        'investment_id',
     ];
 
     /**
@@ -86,6 +89,10 @@ class Movement extends Model
     public function event()
     {
         return $this->hasOne(Event::class, 'id', 'event_id');
+    }
+    public function investment()
+    {
+        return $this->hasOne(Investment::class, 'id', 'investment_id');
     }
     
     public function scopeFilter($query, $request)
