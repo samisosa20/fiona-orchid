@@ -18,7 +18,6 @@ use App\Models\Account;
 use App\Models\Movement;
 
 use App\Controllers\Reports\ReportController;
-use App\Orchid\Layouts\Reports\ChartLineLayout;
 class MovementsListScreen extends Screen
 {
     /**

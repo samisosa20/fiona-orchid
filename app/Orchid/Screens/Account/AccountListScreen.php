@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Orchid\Screens\Account;
 
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
 use App\Orchid\Layouts\Account\AccountListLayout;
+use App\Orchid\Layouts\Account\AccountFiltersLayout;
 
 use App\Models\Account;
 
@@ -39,10 +39,10 @@ class AccountListScreen extends Screen
         }
 
         return [
-            'accounts' => Account::withTrashed()
-            ->where([
+            'accounts' => Account::where([
                 ['user_id', $request->user()->id]
             ])
+            ->when($request->query('status') === 'inactive', fn ($query) => $query->withTrashed())
             ->withBalance()
             ->with('currency')
             ->paginate(),
@@ -93,6 +93,7 @@ class AccountListScreen extends Screen
     {
         return [
             Layout::view('layouts.account.balance'),
+            AccountFiltersLayout::class,
             AccountListLayout::class,
         ];
     }
