@@ -30,9 +30,7 @@ class ReportController extends Controller
             ->first();
 
             // get balance without transferns
-            $close_open = \DB::select('select cast(open_balance as float) as open_balance, cast(incomes as float) as income, cast(expensives as float) as expensive, cast(end_balance as float) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
-
-
+            $close_open = \DB::select('select cast(open_balance as float) as open_balance, cast(incomes as float) as income, cast(expensives as float) as expensive, cast(end_balance as float) as utility from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.' 00:00:00" i, @end_date := "'.$end_date.' 23:59:59" e, @currency := '.$currency.' c, @category_id := '.$category->id.' g) alias, report_open_close_balance')[0];
 
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
@@ -188,9 +186,9 @@ class ReportController extends Controller
             $end = Carbon::parse($end_date);
 
             if($init->diffInDays($end) < 90) {
-                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c) alias, report_balance');
+                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.' 00:00:00" i, @end_date := "'.$end_date.' 23:59:59" e, @currency := '.$currency.' c) alias, report_balance');
             } else {
-                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @currency := '.$currency.' c) alias, report_global_balance');
+                $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.' 00:00:00" i, @end_date := "'.$end_date.' 23:59:59" e, @currency := '.$currency.' c) alias, report_global_balance');
             }
 
             $acumAux = 0;
@@ -231,7 +229,7 @@ class ReportController extends Controller
         $end_date = Carbon::now()->format('Y-m-d');
         $init_date = Carbon::now()->subDays(15)->format('Y-m-d');
 
-        $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.'" i, @end_date := "'.$end_date.'" e, @account_id := '.$account_id.' a) alias, report_balance_account');
+        $balance = \DB::select('select date, amount from (SELECT @user_id := '.$user->id.' u, @init_date := "'.$init_date.' 00:00:00" i, @end_date := "'.$end_date.' 23:59:59" e, @account_id := '.$account_id.' a) alias, report_balance_account');
 
         $acumAux = 0;
         foreach ($balance as $key => &$value) {

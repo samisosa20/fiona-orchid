@@ -1,6 +1,6 @@
 <div class="mb-3">
     <div class="p-4 bg-white rounded shadow-sm h-100 d-flex flex-column">
-        <small class="text-muted d-block mb-1">{{__('Expensive by group')}}</small>
+        <small class="text-muted d-block mb-1">{{__('Category by group')}}</small>
         @foreach ($group_expensive as $group)
         @php
         $amount = is_array($group) ? $group['amount'] : $group->amount;
