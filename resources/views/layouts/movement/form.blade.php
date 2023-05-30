@@ -1,7 +1,9 @@
 <fieldset class="mb-3">
     <div class="bg-white rounded shadow-sm p-4 py-4 d-flex flex-column">
         {!! Orchid\Screen\Fields\Select::make('movement[account_id]')
-            ->fromModel(App\Models\Account::class, 'name')
+            ->fromModel(App\Models\Account::where([
+                    ['user_id', $user->id],
+                    ]), 'name')
             ->empty()
             ->value($accountOut ?? $defaultAccount)
             ->required()
@@ -9,7 +11,9 @@
             !!}
         <div id="container-account_in" class="d-none mb-3">
             {!! Orchid\Screen\Fields\Select::make('movement[account_end_id]')
-                ->fromModel(App\Models\Account::class, 'name')
+                ->fromModel(App\Models\Account::where([
+                    ['user_id', $user->id]
+                    ]), 'name')
                 ->empty()
                 ->required()
                 ->value($accountIn)
