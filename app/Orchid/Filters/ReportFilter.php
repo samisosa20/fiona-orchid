@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Orchid\Filters\Filter;
 use Orchid\Screen\Field;
 use Orchid\Screen\Fields\Select;
-use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\DateTimer;
 
 use App\Models\Currency;
 use App\Models\User;
@@ -30,7 +30,7 @@ class ReportFilter extends Filter
      */
     public function parameters(): ?array
     {
-        return ['date', 'badge_id'];
+        return ['start_date', 'end_date', 'badge_id'];
     }
 
     /**
@@ -53,9 +53,14 @@ class ReportFilter extends Filter
             ->fromModel(Currency::class, 'code')
             ->value($this->request->get('badge_id') ?? $this->request->user()->badge_id)
             ->title(__('Currency')),
-            DateRange::make('date')
-            ->value($this->request->get('date'))
-            ->title(__('Range Date')),
+            DateTimer::make('start_date')
+            ->value($this->request->get('start_date'))
+            ->format('Y-m-d')
+            ->title(__('Start Date')),
+            DateTimer::make('end_date')
+            ->value($this->request->get('end_date'))
+            ->format('Y-m-d')
+            ->title(__('End Date')),
         ];
     }
 

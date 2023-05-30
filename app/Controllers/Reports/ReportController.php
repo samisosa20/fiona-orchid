@@ -18,8 +18,8 @@ class ReportController extends Controller
         try{
             $user = $request->user();
 
-            $init_date = $request->query('date')['start'] ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
-            $end_date = $request->query('date')['end'] ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
+            $init_date = $request->query('start_date') ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
+            $end_date = $request->query('end_date') ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
             $currency = $request->query('badge_id') ?? $user->badge_id;
 
 
