@@ -216,6 +216,7 @@ class ReportController extends Controller
                 'credit_carts' => $credit_carts,
             ];
         } catch(\Illuminate\Database\QueryException $ex){
+            dd($ex);
             return [
                 'message' => 'Datos no obtenidos',
                 'detail' => $ex->errorInfo[0]
