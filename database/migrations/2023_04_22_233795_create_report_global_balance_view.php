@@ -41,7 +41,6 @@ return new class extends Migration
                 join currencies on currencies.id = accounts.badge_id and currencies.id = currency()
                 where date(date_purchase) >= init_date() and date(date_purchase) <= end_date() and movements.user_id = user_id() and accounts.deleted_at is null
                 GROUP by DATE_FORMAT(date_purchase, \"%b-01\")
-                order by DATE_FORMAT(date_purchase, \"%m\")
             ), getinitValue AS (
                 SELECT DATE_FORMAT(init_date(), \"%b-%d\") as date, SUM(IFNULL(amount, 0)) AS open_amount from movements 
                 join accounts on (accounts.id = account_id)
@@ -53,7 +52,7 @@ return new class extends Migration
                 where user_id = user_id() and badge_id = currency() and deleted_at is null
                 and date(created_at) < init_date()
             ), getDate AS (
-                SELECT DATE_FORMAT(db_date, '%b-%d') AS date, day, month FROM time_dimension WHERE db_date BETWEEN init_date() and end_date() and day = 1
+                SELECT DATE_FORMAT(db_date, '%b-%d') AS date, day, month FROM time_dimension WHERE db_date BETWEEN init_date() and end_date() and day = 1 order by month
             ),getAcumValue AS (
                 SELECT d.date, ifnull(amount,0) + ifnull(open_amount, 0) + ifnull(init_amount, 0) as amount
                 FROM getDate d
