@@ -9,13 +9,16 @@ use Orchid\Screen\Action;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 
 use App\Orchid\Layouts\Reports\ChartLineLayout;
 use App\Orchid\Layouts\Reports\ChartPieLayout;
 use App\Orchid\Layouts\Reports\ReportFiltersLayout;
 
 use App\Controllers\Reports\ReportController;
+
+use App\Models\Category;
+use App\Models\Movement;
 
 class ReportScreen extends Screen
 {
@@ -27,6 +30,9 @@ class ReportScreen extends Screen
     public function query(Request $request): iterable
     {
         $data = ReportController::report($request);
+        $init_date = $request->query('start_date') ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
+        $end_date = $request->query('end_date') ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
+        $currency = $request->query('badge_id') ?? auth()->user()->badge_id;
 
         return [
             'incomes' => [
@@ -60,6 +66,9 @@ class ReportScreen extends Screen
                 'expensive'   => number_format($data['open_close']->expensive, 2, ',', '.'),
                 'utility'    => number_format($data['open_close']->utility, 2, ',', '.'),
             ],
+            'init_date' => $init_date,
+            'end_date' => $end_date,
+            'currency' => $currency,
         ];
     }
 
@@ -125,6 +134,37 @@ class ReportScreen extends Screen
                 Layout::view('layouts.reports.expensives'),
                 Layout::view('layouts.reports.creditcard'),
             ]),
+            Layout::modal('movementsModal', [Layout::view('layouts.movement.list')])
+                ->async('asyncGetMovements')
+                ->title(__('Movements'))
+                ->withoutApplyButton(),
+        ];
+    }
+
+    /**
+     * @param Category $category
+     * @param Request $request
+     *
+     * @return array
+     */
+    public function asyncGetMovements(Category $category, Request $request): iterable
+    {
+        $init_date = $request->all()['start_date'] ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
+        $end_date = $request->all()['end_date'] ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
+        $currency = $request->all()['badge_id'] ?? auth()->user()->badge_id;
+
+        $movements = Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['category_id', $category->id],
+            ['badge_id', $currency],
+        ])
+        ->whereDate('date_purchase', '>=', $init_date)
+        ->whereDate('date_purchase', '<=', $end_date)
+        ->join('accounts', 'account_id', 'accounts.id')
+        ->get();
+
+        return [
+            'movements' => $movements,
         ];
     }
 }

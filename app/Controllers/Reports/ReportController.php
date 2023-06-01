@@ -40,12 +40,12 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('categories.name as category,
+            ->selectRaw('movements.category_id, categories.name as category,
             ifnull(sum(amount), 0) as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
-            ->groupBy('categories.name')
+            ->groupBy('movements.category_id','categories.name')
             ->orderByRaw('ifnull(sum(amount), 0) desc')
             ->get();
 
@@ -79,12 +79,12 @@ class ReportController extends Controller
             ])
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
-            ->selectRaw('categories.name as category,
+            ->selectRaw('movements.category_id, categories.name as category,
             ifnull(sum(amount), 0)as amount')
             ->join('categories', 'movements.category_id', 'categories.id')
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
-            ->groupBy('categories.name')
+            ->groupBy('movements.category_id', 'categories.name')
             ->orderByRaw('ifnull(sum(amount), 0)')
             ->get();
             
@@ -169,7 +169,7 @@ class ReportController extends Controller
                         $value->amount += $close_open_transfer->expensive;
                     }
                     $value->amount = $value->amount * 1;
-                    $value->porcent = $income === 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
+                    $value->porcent = $income == 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
                     $saving += $value->amount;
                 }
             }
@@ -177,7 +177,7 @@ class ReportController extends Controller
             $savingArray = [
                 "name" => "Ahorros",
                 "amount" => $saving < 0 ? 0 : $saving,
-                "porcent" => $saving < 0 || $income === 0.0 ? 0.00 : round(abs($saving) / $income * 100, 2)
+                "porcent" => $saving < 0 || $income == 0 ? 0.00 : round(abs($saving) / $income * 100, 2)
             ];
 
             $group_expensive->push($savingArray);

@@ -38,17 +38,17 @@ class InvestmentListLayout extends Table
             TD::make(__('Actions'))
                 ->align(TD::ALIGN_CENTER)
                 ->width('100px')
-                ->render(fn (Investment $event) => DropDown::make()
+                ->render(fn (Investment $investment) => DropDown::make()
                     ->icon('options-vertical')
                     ->list([
                         Link::make(__('Edit'))
-                            ->route('platform.investments.edit', $event->id)
+                            ->route('platform.investments.edit', $investment->id)
                             ->icon('pencil'),
                         ModalToggle::make(__('Movements'))
                             ->icon('directions')
                             ->modal('movementsModal')
                             ->asyncParameters([
-                                'event_id' => $event->id,
+                                'investment_id' => $investment->id,
                             ]),
                     ])),
 
