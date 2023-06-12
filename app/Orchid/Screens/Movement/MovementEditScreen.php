@@ -152,7 +152,7 @@ class MovementEditScreen extends Screen
         if($request->input('movement')['type'] !== 'transfer') {
             $movement->fill($request->collect('movement')->toArray())
                 ->fill(['user_id' => $request->user()->id])
-                ->fill(['amount' => $request->input('movement')['type'] === 'income' ? abs($request->input('movement')['amount']) : abs($request->input('movement')['amount']) * -1])
+                ->fill(['amount' => $request->input('movement')['type'] === 'income' ? abs((float)$request->input('movement')['amount'] ) : abs((float)$request->input('movement')['amount']) * -1])
                 ->save();
         } else {
             $validator = Validator::make($request->all(), [
