@@ -71,8 +71,8 @@ class MovementsListScreen extends Screen
             ->filter($request)
             ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
             ->orderBy('date_purchase', 'desc')
-            ->paginate(),
-            'balances' => $balance_adjust
+            ->paginate(50),
+            'balances' => $balance_adjust,
         ];
     }
 
@@ -121,7 +121,8 @@ class MovementsListScreen extends Screen
             Layout::view('layouts.account.balance'),
             Layout::view('layouts.account.charts'),
             MovementsFiltersLayout::class,
-            MovementsListLayout::class,
+            Layout::view('layouts.movement.moves'),
+            //MovementsListLayout::class,
         ];
     }
 
