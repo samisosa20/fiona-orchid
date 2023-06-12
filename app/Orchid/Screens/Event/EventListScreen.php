@@ -90,7 +90,7 @@ class EventListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            EventListLayout::class,
+            Layout::view('layouts.account.list'),
             Layout::modal('movementsModal', [Layout::view('layouts.movement.list')])
                 ->async('asyncGetMovements')
                 ->title(__('Movements'))

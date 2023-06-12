@@ -8,11 +8,11 @@
         <div class="py-4 px-3 border-bottom">
             <p>{{$credit->name}}</p>
             <div>
-                <small>{{number_format(abs($credit->balance))}}</small>
+                <small>{{number_format(abs($credit->balance))}} ({{$porcent}}%)</small>
                 <small class="float-end">{{number_format($credit->limit)}} {{$credit->currency->code}}</small>
             </div>
             <div class="progress">
-                <div class="progress-bar bg-danger rounded" role="progressbar" aria-valuenow="{{$porcent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{$porcent}}%">{{$porcent}}%</div>
+                <div class="progress-bar bg-danger rounded" role="progressbar" aria-valuenow="{{$porcent}}" aria-valuemin="0" aria-valuemax="100" style="width: {{$porcent}}%"></div>
             </div>
         </div>
         @endforeach

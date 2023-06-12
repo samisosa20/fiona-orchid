@@ -49,14 +49,19 @@ const pageMovement = () => {
             }
         }
 
-        const type = document.querySelector('[name="movement\\[type\\]"')
+        const types = document.querySelectorAll('[name="movement\\[type\\]"')
         const accountStart = document.querySelector('[name="movement\\[account_id\\]"')
         const accountEnd = document.querySelector('[name="movement\\[account_end_id\\]"')
 
-        type.addEventListener('change', (e) => handleChangeType(e.target.value))
+        types.forEach(elem => elem.addEventListener('change', (e) => handleChangeType(e.target.value)))
         accountStart.addEventListener('change', () => handleChangeAccounts())
         accountEnd.addEventListener('change', () => handleChangeAccounts())
-        handleChangeType(type.value)
+        for (const radio of types) {
+            if (radio.checked) {
+              handleChangeType(radio.value)
+              break;
+            }
+          }
     }
 }
 

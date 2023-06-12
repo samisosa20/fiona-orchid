@@ -94,7 +94,7 @@ class AccountListScreen extends Screen
         return [
             Layout::view('layouts.account.balance'),
             AccountFiltersLayout::class,
-            AccountListLayout::class,
+            Layout::view('layouts.account.list'),
         ];
     }
 

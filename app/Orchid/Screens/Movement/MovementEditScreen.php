@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens\Movement;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Orchid\Screen\Action;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
-use Orchid\Support\Color;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +17,6 @@ use App\Models\Category;
 use App\Models\Account;
 
 use App\Orchid\Layouts\Movement\MovementTypeLayout;
-use App\Orchid\Layouts\Movement\MovementEditLayout;
 
 class MovementEditScreen extends Screen
 {
@@ -57,13 +54,14 @@ class MovementEditScreen extends Screen
         $amountEnd = null;
 
         if($movement){
-            $movement->type = $movement->transferOut || $movement->transferIn ? 'transfer' : 'movement';
+            $movement->type = $movement->transferOut || $movement->transferIn ? 'transfer' : ($movement->amount > 0 ? 'income' : 'expensive');
             if($movement->transferOut || $movement->transferIn){
                 $accountIn = $movement->transferIn ? $movement->transferIn->account_id : $movement->account_id;
                 $accountOut = $movement->transferOut ? $movement->transferOut->account_id : $movement->account_id;
                 $amountEnd = $movement->transferIn ? abs($movement->transferIn->amount) : abs($movement->amount);
                 $movement->amount = $movement->transferOut ? abs($movement->transferOut->amount) : abs($movement->amount);
             }
+            $movement->amount = $movement->amount ? abs($movement->amount) : null;
         }
 
         return [
@@ -151,9 +149,10 @@ class MovementEditScreen extends Screen
             return;
         }
 
-        if($request->input('movement')['type'] == 'movement') {
+        if($request->input('movement')['type'] !== 'transfer') {
             $movement->fill($request->collect('movement')->toArray())
                 ->fill(['user_id' => $request->user()->id])
+                ->fill(['amount' => $request->input('movement')['type'] === 'income' ? abs($request->input('movement')['amount']) : abs($request->input('movement')['amount']) * -1])
                 ->save();
         } else {
             $validator = Validator::make($request->all(), [
@@ -174,6 +173,9 @@ class MovementEditScreen extends Screen
             if($movement->id){
                 // if out move
                 if(!$movement->transfer_id) {
+                    $accountIn = Account::find($request->input('movement.account_end_id'));
+                    $accountOut = Account::find($request->input('movement.account_id'));
+
                     $outData = [
                         'account_id' => $request->input('movement.account_id'),
                         'description' => $request->input('movement.description'),
@@ -186,7 +188,7 @@ class MovementEditScreen extends Screen
                     $inData = [
                         'account_id' => $request->input('movement.account_end_id'),
                         'description' => $request->input('movement.description'),
-                        'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
+                        'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
                         'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];
@@ -196,10 +198,13 @@ class MovementEditScreen extends Screen
 
                     $outMovement ->fill($inData)->save();
                 } else {
+                    $accountIn = Account::find($request->input('movement.account_id'));
+                    $accountOut = Account::find($request->input('movement.account_end_id'));
+
                     $outData = [
                         'account_id' => $request->input('movement.account_end_id'),
                         'description' => $request->input('movement.description'),
-                        'amount' => abs((float)$request->input('movement.amount_end')) > 0.0 ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
+                        'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
                         'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];

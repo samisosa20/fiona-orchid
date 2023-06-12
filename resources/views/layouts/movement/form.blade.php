@@ -56,6 +56,7 @@
         {!! Orchid\Screen\Fields\Input::make('movement[amount_end]')
             ->type('number')
             ->step(0.01)
+            ->min(0)
             ->value($amountEnd)
             ->title(__('Amount in'))
         !!}

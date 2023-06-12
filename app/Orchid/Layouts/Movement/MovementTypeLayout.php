@@ -8,11 +8,7 @@ use Orchid\Screen\Field;
 use Orchid\Screen\Layouts\Rows;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\DateTimer;
-use Orchid\Screen\Fields\Select;
-
-use App\Models\Currency;
-
-use App\Controllers\Types\CommonTypesController;
+use Orchid\Screen\Fields\RadioButtons;
 
 class MovementTypeLayout extends Rows
 {
@@ -24,10 +20,11 @@ class MovementTypeLayout extends Rows
     public function fields(): array
     {
         return [
-            Select::make('movement.type')
+            RadioButtons::make('movement.type')
                 ->options([
-                    'movement' => 'Movement',
-                    'transfer' => 'Transfer'
+                    'income' => __('Income'),
+                    'expensive' => __('Expensive'),
+                    'transfer' => __('Transfer')
                 ])
                 ->required()
                 ->title(__('Type Movement')),
@@ -35,6 +32,7 @@ class MovementTypeLayout extends Rows
             Input::make('movement.amount')
                 ->type('number')
                 ->step(0.01)
+                ->min(0)
                 ->required()
                 ->title(__('Amount')),
 

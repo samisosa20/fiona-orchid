@@ -106,7 +106,7 @@ class InvestmentListScreen extends Screen
     {
         return [
             Layout::view('layouts.investment.balance'),
-            InvestmentListLayout::class,
+            Layout::view('layouts.account.list'),
             Layout::modal('movementsModal', [Layout::view('layouts.movement.list')])
                 ->async('asyncGetMovements')
                 ->title(__('Movements'))
