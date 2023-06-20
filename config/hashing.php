@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'driver' => 'sha512',
+    'driver' => 'bcrypt',
 
     /*
     |--------------------------------------------------------------------------
@@ -49,19 +49,4 @@ return [
         'time' => 4,
     ],
 
-
-     /*
-    |--------------------------------------------------------------------------
-    | Sha512 Options
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the configuration options that should be used when
-    | passwords are hashed using the Sha512 algorithm. These will allow you
-    | to control the salt used to hash the given password.
-    |
-    */
-
-    'sha512' => [
-        'salt' => env('SALT')
-    ],
 ];

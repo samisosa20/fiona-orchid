@@ -40,6 +40,12 @@ return new class extends Migration
             ->on('events')
             ->onUpdate('cascade')
             ->onDelete('set null');
+            $table->unsignedBigInteger('investment_id')->nullable();
+            $table->foreign('investment_id')
+            ->references('id')
+            ->on('investments')
+            ->onUpdate('cascade')
+            ->onDelete('set null');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')
             ->references('id')

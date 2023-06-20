@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
-use App\Models\Account;
+use App\Models\Currency;
 use App\Models\Category;
+use App\Models\Period;
 
 class Budget extends Model
 {
@@ -22,7 +23,7 @@ class Budget extends Model
         'category_id',
         'amount',
         'badge_id',
-        'month',
+        'period_id',
         'year',
         'user_id',
     ];
@@ -56,6 +57,16 @@ class Budget extends Model
     public function category()
     {
         return $this->hasOne(Category::class, 'id', 'category_id');
+    }
+    
+    public function period()
+    {
+        return $this->hasOne(Period::class, 'id', 'period_id');
+    }
+    
+    public function currency()
+    {
+        return $this->hasOne(Currency::class, 'id', 'badge_id');
     }
     
 }
