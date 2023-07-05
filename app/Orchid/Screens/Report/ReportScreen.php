@@ -69,6 +69,7 @@ class ReportScreen extends Screen
             'init_date' => $init_date,
             'end_date' => $end_date,
             'currency' => $currency,
+            'movements' => []
         ];
     }
 
@@ -149,13 +150,14 @@ class ReportScreen extends Screen
      */
     public function asyncGetMovements(Category $category, Request $request): iterable
     {
+
         $init_date = $request->all()['start_date'] ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
         $end_date = $request->all()['end_date'] ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
         $currency = $request->all()['badge_id'] ?? auth()->user()->badge_id;
 
         $movements = Movement::where([
             ['movements.user_id', auth()->user()->id],
-            ['category_id', $category->id],
+            ['category_id', $request->all()['category_id']],
             ['badge_id', $currency],
         ])
         ->whereDate('date_purchase', '>=', $init_date)
@@ -165,6 +167,37 @@ class ReportScreen extends Screen
 
         return [
             'movements' => $movements,
+            'metrics' => [
+                'open_balance' => 0,
+                'income' => 0,
+                'expensive' => 0,
+                'utility' => 0,
+            ],
+            'incomes' => [
+                [
+                    'name'   => 'Incomes',
+                    'values' => [0],
+                    'labels' => [''],
+                ]
+            ],
+            'expensives' => [
+                [
+                    'name'   => 'Expensives',
+                    'values' => [0],
+                    'labels' => [''],
+                ]
+            ],
+            'balances' => [
+                [
+                    'name'   => 'Expensives',
+                    'values' => [0],
+                    'labels' => [''],
+                ]
+            ],
+            'group_expensive' => [],
+            'list_expensives' => [],
+            'list_incomes' => [],
+            'credit_carts' => [],
         ];
     }
 }

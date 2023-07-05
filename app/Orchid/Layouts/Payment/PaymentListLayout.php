@@ -32,21 +32,11 @@ class PaymentListLayout extends Table
     public function columns(): array
     {
         return [
-            TD::make(__('Actions'))
-                ->align(TD::ALIGN_CENTER)
-                ->width('100px')
-                ->render(fn (PlannedPayment $payment) => DropDown::make()
-                    ->icon('options-vertical')
-                    ->list([
-                        Link::make(__('Edit'))
-                            ->route('platform.payments.edit', $payment->id)
-                            ->icon('pencil'),
-                    ])),
-
             TD::make('account_id', __('Account'))
                 ->sort()
                 ->cantHide()
-                ->render(fn (PlannedPayment $payment) => $payment->account->name),
+                ->render(fn (PlannedPayment $payment) =>  Link::make($payment->account->name)
+                ->route('platform.payments.edit', $payment->id)),
             
             TD::make('category_id', __('Category'))
                 ->sort()
@@ -57,6 +47,11 @@ class PaymentListLayout extends Table
                 ->sort()
                 ->cantHide()
                 ->render(fn (PlannedPayment $payment) => number_format($payment->amount)),      
+            
+            TD::make('specific_day', __('Specific Day'))
+                ->sort()
+                ->cantHide()
+                ->render(fn (PlannedPayment $payment) => $payment->specific_day),      
 
         ];
     }

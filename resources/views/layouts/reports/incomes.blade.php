@@ -6,10 +6,10 @@
         <small class="text-muted d-block mb-1">{{__('List Incomes')}}</small>
         <div class="scroll-y" style="max-height: 358px;">
             @foreach ($list_incomes as $income)
-            <div class="py-4 px-3 border-bottom {{$income->category_id ? 'cursor' : ''}}" formaction="{{request()->server("HTTP_HOST").'/'.request()->path()}}/showMovementsModal" data-controller="modal-toggle"
+            <div class="py-4 px-3 border-bottom {{$income->category_id ? 'cursor' : ''}}" formaction="{{request()->getSchemeAndHttpHost().'/'.request()->path()}}/showMovementsModal" data-controller="modal-toggle"
                 data-action="{{$income->category_id ? 'click->modal-toggle#targetModal' : null}}" data-modal-toggle-title="Lista de movimeintos"
                 data-modal-toggle-key="movementsModal" data-modal-toggle-async="" data-modal-toggle-params="{&quot;category_id&quot;:{{$income->category_id}},&quot;start_date&quot;:&quot;{{$init_date}}&quot;,&quot;end_date&quot;:&quot;{{$end_date}}&quot;,&quot;badge_id&quot;:{{$currency}}}"
-                data-modal-toggle-action="{{request()->server("HTTP_HOST").'/'.request()->path()}}/showMovementsModal" data-modal-toggle-open="">
+                data-modal-toggle-action="{{request()->getSchemeAndHttpHost().'/'.request()->path()}}/showMovementsModal" data-modal-toggle-open="">
                 <p class="text-black h5 fw-normal mb-0">
                     {{ $income->category }}
                 </p>

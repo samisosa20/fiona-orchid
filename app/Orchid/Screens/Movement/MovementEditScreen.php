@@ -180,7 +180,7 @@ class MovementEditScreen extends Screen
                         'account_id' => $request->input('movement.account_id'),
                         'description' => $request->input('movement.description'),
                         'amount' => abs((float)$request->input('movement.amount')) * -1,
-                        'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')) : 1,
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];
                     $movement->fill($outData)->save();
@@ -189,7 +189,7 @@ class MovementEditScreen extends Screen
                         'account_id' => $request->input('movement.account_end_id'),
                         'description' => $request->input('movement.description'),
                         'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
-                        'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount') : 1,
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];
                     $outMovement = Movement::where([
@@ -205,7 +205,7 @@ class MovementEditScreen extends Screen
                         'account_id' => $request->input('movement.account_end_id'),
                         'description' => $request->input('movement.description'),
                         'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('movement.amount_end')) : abs((float)$request->input('movement.amount')),
-                        'trm' => ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount'),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? ($request->input('movement.amount_end') ?? $request->input('movement.amount')) / $request->input('movement.amount') : 1,
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];
                     $movement->fill($outData)->save();
@@ -214,7 +214,7 @@ class MovementEditScreen extends Screen
                         'account_id' => $request->input('movement.account_id'),
                         'description' => $request->input('movement.description'),
                         'amount' => abs((float)$request->input('movement.amount')) * -1,
-                        'trm' => $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? $request->input('movement.amount') / ($request->input('movement.amount_end') ?? $request->input('movement.amount')) : 1,
                         'date_purchase' => $request->input('movement.date_purchase'),
                     ];
                     $inMovement = Movement::where([
@@ -272,7 +272,12 @@ class MovementEditScreen extends Screen
      */
     public function remove(Movement $movement)
     {
+        $transfer_id = $movement->transfer_id;
         $movement->delete();
+        
+        if($transfer_id) {
+            Movement::find($transfer_id)->delete();
+        }
 
         Toast::info(__('Movement was removed'));
 
