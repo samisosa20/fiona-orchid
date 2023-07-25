@@ -32,7 +32,7 @@
         @endphp
         <div class="col mb-4">
             <div class="rounded shadow-sm bg-white p-3 mx-auto cursor" style="width: 350px; height: 160px;">
-                <div class="d-flex justify-content-between align-items-center"  formaction="{{request()->server('HTTP_HOST').'/'.request()->path()}}/?event_id={{$event->id}}" data-controller="modal-toggle" data-action="click->modal-toggle#targetModal" data-modal-toggle-title="" data-modal-toggle-key="movementsModal" data-modal-toggle-async="true" data-modal-toggle-params="{&quot;event_id&quot;:{{$event->id}}}" data-modal-toggle-action="{{request()->server('HTTP_HOST').'/'.request()->path()}}/?event_id={{$event->id}}" data-modal-toggle-open="">
+                <div class="d-flex justify-content-between align-items-center"  formaction="{{request()->server('HTTP_HOST').'/'.request()->path()}}/?id={{$event->id}}" data-controller="modal-toggle" data-action="click->modal-toggle#targetModal" data-modal-toggle-title="" data-modal-toggle-key="movementsModal" data-modal-toggle-async="true" data-modal-toggle-params="{&quot;id&quot;:{{$event->id}}}" data-modal-toggle-action="{{request()->server('HTTP_HOST').'/'.request()->path()}}/?id={{$event->id}}" data-modal-toggle-open="">
                     <h2 class="fw-bold lh-md" style="font-size: 24px;">
                         {{$event->name}}
                     </h2>

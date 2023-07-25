@@ -116,14 +116,17 @@ class InvestmentListScreen extends Screen
     }
 
 /**
-     * @param Investment $investment
+     * @param Investment $id
      *
      * @return array
      */
-    public function asyncGetMovements(Investment $investment): iterable
+    public function asyncGetMovements(Investment $id, Request $request): iterable
     {
+        $investment = Investment::find($request->query('investment_id'));
         return [
             'movements' => $investment->movements,
+            'investments' => [],
+            'balances' => [],
         ];
     }
 

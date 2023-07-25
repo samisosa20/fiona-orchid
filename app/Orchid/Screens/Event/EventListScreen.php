@@ -100,14 +100,17 @@ class EventListScreen extends Screen
     }
 
 /**
-     * @param Event $event
+     * @param Event $id
      *
      * @return array
      */
-    public function asyncGetMovements(Event $event): iterable
+    public function asyncGetMovements(Event $id, Request $request): iterable
     {
+        $event = Event::find($request->query('id'));
+
         return [
             'movements' => $event->movements,
+            'events' => [],
         ];
     }
 
