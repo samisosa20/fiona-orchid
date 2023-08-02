@@ -36,7 +36,7 @@ return new class extends Migration
         return "
             CREATE VIEW general_balance_account AS
             with get_amount as (
-                SELECT code , a.init_amount, (select cast(ifnull(sum(amount), 0) as float) from movements where account_id = a.id) as balance from accounts a
+                SELECT code , a.init_amount, (select ifnull(sum(amount), 0) from movements where account_id = a.id) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
                 where a.user_id = user_id() and a.id = account_id()
             ), sum_amount as (

@@ -104,6 +104,9 @@ class MovementsListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
+            Link::make(__('Edit'))
+                ->icon('pencil')
+                ->route('platform.accounts.edit', $this->account->id),
             Link::make(__('Movement'))
                 ->icon('plus')
                 ->route('platform.movement.create'),
