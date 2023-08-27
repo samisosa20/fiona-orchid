@@ -12,7 +12,8 @@
         "laravel/tinker": "^2.7",
         "nesbot/carbon": "^2.66",
         "orchid/icons": "^2.2",
-        "orchid/platform": "^14.0.0"
+        "orchid/platform": "^14.0.0",
+        "tymon/jwt-auth": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

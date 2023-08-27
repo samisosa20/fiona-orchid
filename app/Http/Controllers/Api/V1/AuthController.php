@@ -19,6 +19,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try{
+
             $validator = Validator::make($request->all(), [
                 'password' => [
                     'required',
@@ -36,33 +37,26 @@ class AuthController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            if (!$user = User::where([
-                ['email', $request->email],
-                ['password', Hash::make($request->input('password'))]
-            ])
-            ->addSelect([
-                'transfer_id' => \DB::table('categories')
-                ->select('id')
-                ->whereColumn('user_id', 'users.id')
-                ->where('group_id', '=', env('GROUP_TRANSFER_ID'))
-            ])
-            ->first()) {
+            $credentials = $request->only('email', 'password');
+
+            if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json([
                     'message' => 'Usuario o contraseña incorrecta'
-                ], 400);
+                ], 401);
             }
 
-            $token = JWTAuth::fromUser($user);
+            $user = JWTAuth::user();
 
             return response()->json([
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'transfer_id' => $user->transfer_id,
+                    'transfer_id' => $user->transferId->id,
                     'currency' => $user->badge_id,
                 ],
                 'token' => $token
             ]);
+
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' =>  $ex->errorInfo[0] === "23000" ? 'Usuario registrado' : 'Datos no guardados',
