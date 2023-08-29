@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
 use App\Models\Movement;
@@ -15,7 +14,7 @@ class ReportController extends Controller
     public function report(Request $request)
     {
         try{
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $init_date = $request->query('init_date') ?? now()->format("Y-m-d");
             $end_date = $request->query('end_date') ?? now()->format("Y-m-d");

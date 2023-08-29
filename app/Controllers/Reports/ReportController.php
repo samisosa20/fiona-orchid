@@ -4,7 +4,6 @@ namespace App\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
 
 use App\Models\Movement;

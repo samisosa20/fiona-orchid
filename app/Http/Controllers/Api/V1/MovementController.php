@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\Movement;
 
@@ -19,7 +17,7 @@ class MovementController extends Controller
      */
     public function index()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $movements = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn'])
         ->where([
             ['user_id', $user->id]
@@ -74,7 +72,7 @@ class MovementController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             if($request->input('type') === 'move') {
                 $movement = Movement::create(array_merge($request->input(), ['user_id' => $user->id]));
@@ -137,7 +135,7 @@ class MovementController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $data = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn'])
         ->where([
             ['user_id', $user->id],
@@ -289,7 +287,7 @@ class MovementController extends Controller
     public function destroy(Movement $movement)
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             if($movement->transfer_id){
                 // if is transfer and is in movevemt so delete out movement
@@ -320,7 +318,7 @@ class MovementController extends Controller
      */
     public function active()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $movements = Movement::where([
             ['user_id', $user->id],
         ])

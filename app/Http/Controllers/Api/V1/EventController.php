@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\Event;
 use App\Models\Movement;
@@ -20,7 +18,7 @@ class EventController extends Controller
      */
     public function index()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $events = Event::where([
             ['user_id', $user->id]
         ])
@@ -76,7 +74,7 @@ class EventController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $event = Event::create(array_merge($request->input(), ['user_id' => $user->id]));
 
@@ -100,7 +98,7 @@ class EventController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $data = Event::with(['movements'])
         ->where([
             ['user_id', $user->id],
@@ -197,7 +195,7 @@ class EventController extends Controller
      */
     public function active()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $events = Event::where([
             ['user_id', $user->id],
         ])

@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\Category;
 
@@ -19,10 +17,10 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $categories = Category::withTrashed()
         ->where([
-            ['user_id', $user->id],
+            ['user_id', $request->user()->id],
             ['group_id', '<>', env('GROUP_TRANSFER_ID')]
         ])
         ->with(['group', 'categoryFather'])
@@ -78,7 +76,7 @@ class CategoryController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $category = Category::create(array_merge($request->input(), ['user_id' => $user->id]));
 
@@ -102,7 +100,7 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $data = Category::withTrashed()
         ->where([
             ['user_id', $user->id],
@@ -110,6 +108,24 @@ class CategoryController extends Controller
         ])
         ->with(['group', 'categoryFather'])
         ->first();
+
+        $data->categories = array();
+        if($data->id) {
+            $data->categories = Category::withTrashed()
+            ->where([
+                ['user_id', auth()->user()->id],
+                ['category_id', $data->id]
+            ])
+            ->with(['group', 'categoryFather'])
+            ->addSelect([
+                'sub_categories' => \DB::table('categories as b')
+                ->selectRaw('count(*)')
+                ->whereNull('b.deleted_at')
+                ->whereColumn('categories.id', 'b.category_id')
+            ])
+            ->get();
+        }
+
         if($data) {
             return response()->json($data);
         }
@@ -222,7 +238,7 @@ class CategoryController extends Controller
     public function listCategories()
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
             $movements = Category::where([
                 ['categories.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]

@@ -10,8 +10,8 @@ use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
-use App\Orchid\Layouts\Account\AccountListLayout;
 use App\Orchid\Layouts\Account\AccountFiltersLayout;
+use App\Controllers\Accounts\AccountController;
 
 use App\Models\Account;
 
@@ -24,20 +24,6 @@ class AccountListScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        $balance = \DB::select('select * from (SELECT @user_id := '.$request->user()->id.' i) alias, general_month_year');
-        $total_balance = \DB::select('select * from (SELECT @user_id := '.$request->user()->id.' i) alias, general_balance');
-        
-        foreach ($total_balance as &$value) {
-            $month = array_values(array_filter($balance, fn ($v) => $v->type === 'month' && $v->currency === $value->currency));
-            if(count($month) > 0) {
-                $value->month = $month[0]->balance;
-            }
-            $year = array_values(array_filter($balance, fn ($v) => $v->type === 'year' && $v->currency === $value->currency));
-            if(count($year) > 0) {
-                $value->year = $year[0]->balance;
-            }
-        }
-
         return [
             'accounts' => Account::where([
                 ['user_id', $request->user()->id]
@@ -46,7 +32,7 @@ class AccountListScreen extends Screen
             ->withBalance()
             ->with('currency')
             ->paginate(),
-            'balances' => $total_balance
+            'balances' => AccountController::totalBalance()
         ];
     }
 
