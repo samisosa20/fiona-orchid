@@ -104,7 +104,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
 
         $data = User::withTrashed()
         ->where([
@@ -163,7 +163,7 @@ class UserController extends Controller
      */
     public function profile()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         unset($user->password);
         return response()->json($user);
     }
@@ -177,7 +177,7 @@ class UserController extends Controller
     public function updateProfile(Request $request)
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
             User::find($user->id)
             ->update([
                 'name' => $request->input('name'),

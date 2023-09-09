@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\Account;
 use App\Models\Movement;
 
+use App\Controllers\Accounts\AccountController as AccountControl;
+use App\Controllers\Reports\ReportController;
 class AccountController extends Controller
 {
     /**
@@ -19,7 +20,7 @@ class AccountController extends Controller
      */
     public function index()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $accounts = Account::withTrashed()
         ->with(['currency'])
         ->withBalance()
@@ -28,7 +29,10 @@ class AccountController extends Controller
         ])
         ->get();
 
-        return response()->json($accounts);
+        return response()->json([
+            'accounts' => $accounts,
+            'balances' => AccountControl::totalBalance()
+        ]);
     }
 
     /**
@@ -63,6 +67,9 @@ class AccountController extends Controller
                 'type_id' => [
                     'required',
                 ],
+                'badge_id' => [
+                    'required',
+                ],
             ]);
 
             if($validator->fails()){
@@ -72,7 +79,7 @@ class AccountController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $account = Account::create(array_merge($request->input(), ['user_id' => $user->id]));
 
@@ -94,9 +101,9 @@ class AccountController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $data = Account::withTrashed()
         ->with(['currency'])
         ->where([
@@ -105,98 +112,28 @@ class AccountController extends Controller
         ])
         ->first();
         if($data) {
-            $month_transfer = Movement::where([
-                ['movements.user_id', $user->id],
-                ['trm', '<>', 1],
-                ['account_id', $id]
-            ])
-            ->whereRaw('month(date_purchase) = month(now()) and year(date_purchase) = year(now())')
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->first();
-            
-            $month_balance = Movement::where([
-                ['movements.user_id', $user->id],
-                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['account_id', $id]
-            ])
-            ->whereRaw('month(date_purchase) = month(now()) and year(date_purchase) = year(now())')
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
-            ->first();
+            $balance = ReportController::balanceByAccount($request, $data->id);
 
-            $year_transfer = Movement::where([
-                ['movements.user_id', $user->id],
-                ['trm', '<>', 1],
-                ['account_id', $id]
-            ])
-            ->whereRaw('year(date_purchase) = year(now())')
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->first();
-            
-            $year_balance = Movement::where([
-                ['movements.user_id', $user->id],
-                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['account_id', $id]
-            ])
-            ->whereRaw('year(date_purchase) = year(now())')
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
-            ->first();
-            
-            $total_transfer = Movement::where([
-                ['movements.user_id', $user->id],
-                ['trm', '<>', 1],
-                ['account_id', $id]
-            ])
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->first();
-            
-            $total_balance = Movement::where([
-                ['movements.user_id', $user->id],
-                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
-                ['account_id', $id]
-            ])
-            ->selectRaw('ifnull(sum(if(amount > 0, amount, 0)), 0) as incomes, ifnull(sum(if(amount < 0, amount, 0)), 0) as expensives')
-            ->join('accounts', 'account_id', 'accounts.id')
-            ->join('categories', 'movements.category_id', 'categories.id')
-            ->first();
-
-            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i, @account_id := '.$id.' a) alias, general_month_year_account');
-            $balance_total = \DB::select('select * from (SELECT @user_id := '.$user->id.'  i, @account_id := '.$id.' a) alias, general_balance_account');
-
-            $balance_adjust = $balance_total = array_map(function($element) {
-                $element->type = "total";
-                return $element;
-              }, $balance_total);
-
-            $month = [
-                'type' => 'month',
-                'incomes' => $month_transfer->incomes + $month_balance->incomes,
-                'expensives' => $month_transfer->expensives + $month_balance->expensives,
-            ];
-
-            $year = [
-                'type' => 'year',
-                'incomes' => $year_transfer->incomes + $year_balance->incomes,
-                'expensives' => $year_transfer->expensives + $year_balance->expensives,
-            ];
-            $total = [
-                'type' => 'total',
-                'incomes' => $total_transfer->incomes + $total_balance->incomes,
-                'expensives' => $total_transfer->expensives + $total_balance->expensives,
-            ];
-
-            $data->month = $month;
-            $data->year = $year;
-            $data->total = $total;
-            $data->balance = array_merge($movements, $balance_adjust);
-            
-            return response()->json($data);
+            return response()->json([
+                'balancesAccount' => [
+                    [
+                        'name'   => 'Balance',
+                        'values' => array_map(fn ($v) => $v->amount, $balance),
+                        'labels' => array_map(fn ($v) => $v->date, $balance),
+                    ]
+                ],
+                'account' => $data,
+                'movements' => Movement::where([
+                    ['account_id', $data->id],
+                    ['user_id', auth()->user()->id],
+                ])
+                ->filters()
+                ->filter($request)
+                ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
+                ->orderBy('date_purchase', 'desc')
+                ->paginate(50),
+                'balances' => AccountControl::totalBalanceByAccount($data),
+            ]);
         }
         return response([
             'message' =>  'Datos no encontrados',
@@ -236,6 +173,9 @@ class AccountController extends Controller
                     'required'
                 ],
                 'type_id' => [
+                    'required',
+                ],
+                'badge_id' => [
                     'required',
                 ],
             ]);
@@ -314,7 +254,7 @@ class AccountController extends Controller
     public function movements(int $id)
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
             $movements = Movement::where([
                 ['account_id', $id],
                 ['user_id', $user->id],
@@ -339,7 +279,7 @@ class AccountController extends Controller
     public function balances()
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
             $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
             return response()->json($movements);
         } catch(\Illuminate\Database\QueryException $ex){
@@ -358,7 +298,7 @@ class AccountController extends Controller
     public function balancesMonthYear()
     {
         try {
-            $user = JWTAuth::user();
+            $user = auth()->user();
             $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_month_year');
             $balance_total = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
 

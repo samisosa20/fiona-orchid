@@ -13,6 +13,10 @@ use Illuminate\Support\Str;
 
 use App\Models\User;
 use App\Models\Category;
+use App\Models\Currency;
+use App\Models\TypeAccount;
+
+use App\Controllers\Types\CommonTypesController;
 
 class AuthController extends Controller
 {
@@ -45,7 +49,7 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             return response()->json([
                 'data' => [
@@ -54,7 +58,10 @@ class AuthController extends Controller
                     'transfer_id' => $user->transferId->id,
                     'currency' => $user->badge_id,
                 ],
-                'token' => $token
+                'token' => $token,
+                'currencies' => Currency::get(),
+                'accounts_type' => TypeAccount::get(),
+                'periods' => CommonTypesController::listPeriodicity(),
             ]);
 
         } catch(\Illuminate\Database\QueryException $ex){

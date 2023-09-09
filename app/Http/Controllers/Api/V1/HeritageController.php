@@ -3,11 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\DB;
  
 use App\Models\Heritage;
 use App\Models\Movement;
@@ -22,7 +19,7 @@ class HeritageController extends Controller
      */
     public function index(Request $request)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $heritages = Heritage::where([
             ['user_id', $user->id]
         ])
@@ -80,7 +77,7 @@ class HeritageController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $heritage = Heritage::create(array_merge($request->input(), ['user_id' => $user->id]));
 
@@ -189,25 +186,24 @@ class HeritageController extends Controller
         }
     }
 
-    /**
-     * Display a listing of the resource.
+   /**
+     * Display a listing of budget per year.
      *
      * @return \Illuminate\Http\Response
      */
-    public function consolidate(Request $request)
+    public function listYear()
     {
-        $user = JWTAuth::user();
-
-        $heritages = Heritage::where([
-            ['user_id', $user->id]
+        $heritages =  Heritage::where([
+            ['user_id', auth()->user()->id]
         ])
         ->distinct('year')
         ->select('year')
         ->orderBy('year')
         ->get();
+
         foreach ($heritages as &$value) {
-            $value->balance = Movement:: where([
-                ['movements.user_id', $user->id],
+            $value->balance = Movement::where([
+                ['movements.user_id', auth()->user()->id],
             ])
             ->whereYear('date_purchase', '=', $value->year)
             ->selectRaw('year(date_purchase) as year, currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
@@ -215,33 +211,28 @@ class HeritageController extends Controller
             ->join('currencies', 'currencies.id', 'accounts.badge_id')
             ->groupByRaw('year(date_purchase), currencies.code, badge_id')
             ->get();
+
             foreach ($value->balance  as &$balance) {
                 $init_amout = Account::where([
-                    ['user_id', $user->id],
+                    ['user_id', auth()->user()->id],
                     ['badge_id', $balance->badge_id],
                 ])
                 ->selectRaw('sum(init_amount) as amount')
                 ->whereNull('deleted_at')
                 ->first();
-                $balance->movements = $balance->movements + $init_amout->amount;
+                
                 $comercial_amount = Heritage::where([
-                    ['user_id', $user->id],
+                    ['user_id', auth()->user()->id],
                     ['year', $value->year],
                     ['badge_id', $balance->badge_id],
                 ])
                 ->selectRaw('cast(ifnull(sum(comercial_amount), 0) as float) as comercial_amount')
                 ->first();
-                $legal_amount = Heritage::where([
-                    ['user_id', $user->id],
-                    ['year', $value->year],
-                    ['badge_id', $balance->badge_id],
-                ])
-                ->selectRaw('cast(ifnull(sum(legal_amount), 0) as float) as legal_amount')
-                ->first();
-                $balance->comercial_amount = $comercial_amount->comercial_amount;
-                $balance->legal_amount = $legal_amount->legal_amount;
+
+                $balance->amount = $comercial_amount->comercial_amount + $balance->movements + $init_amout->amount;
             }
         }
+
 
         return response()->json($heritages);
     }

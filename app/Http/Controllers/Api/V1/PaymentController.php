@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
  
 use App\Models\PlannedPayment;
 
@@ -19,14 +17,10 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $payments = PlannedPayment::where([
             ['user_id', $user->id]
         ])
-        ->with('category')
-        ->with(['account' => function ($query) {
-            $query->with('currency');
-        }])
         ->get();
 
         return response()->json($payments);
@@ -77,7 +71,7 @@ class PaymentController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = JWTAuth::user();
+            $user = auth()->user();
 
             $payment = PlannedPayment::create(array_merge($request->input(), ['user_id' => $user->id]));
 
@@ -101,7 +95,7 @@ class PaymentController extends Controller
      */
     public function show($id)
     {
-        $user = JWTAuth::user();
+        $user = auth()->user();
         $data = PlannedPayment::with('category')
         ->with(['account' => function ($query) {
             $query->with('currency');

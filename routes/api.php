@@ -5,6 +5,12 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\BudgetController;
+use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\HeritageController;
+use App\Http\Controllers\Api\V1\MovementController;
+use App\Http\Controllers\Api\V1\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,4 +35,14 @@ Route::prefix('v1')->group(function () {
 // Private routes
 Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::apiResource('/accounts', AccountController::class);
+    Route::apiResource('/budgets', BudgetController::class);
+    Route::get('/budgets-list', [BudgetController::class, 'listYear']);
+    Route::get('/budgets-report', [BudgetController::class, 'reportBudget']);
+    Route::apiResource('/categories', CategoryController::class);
+    Route::apiResource('/events', EventController::class);
+    Route::apiResource('/heritages', HeritageController::class);
+    Route::get('/heritages-list', [HeritageController::class, 'listYear']);
+    Route::apiResource('/movements', MovementController::class);
+    Route::apiResource('/payments', PaymentController::class);
+    Route::apiResource('/investments', MovementController::class);
 });
