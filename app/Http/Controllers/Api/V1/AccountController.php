@@ -60,7 +60,7 @@ class AccountController extends Controller
                 'init_amount' => [
                     'required'
                 ],
-                'type' => [
+                'type_id' => [
                     'required',
                 ],
             ]);
@@ -235,7 +235,7 @@ class AccountController extends Controller
                 'init_amount' => [
                     'required'
                 ],
-                'type' => [
+                'type_id' => [
                     'required',
                 ],
             ]);
