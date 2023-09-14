@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens\Report;
 
-
 use Orchid\Screen\Action;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
-use App\Orchid\Layouts\Reports\ChartLineLayout;
-use App\Orchid\Layouts\Reports\ChartPieLayout;
 use App\Orchid\Layouts\Reports\ReportFiltersLayout;
 
 use App\Controllers\Reports\ReportController;

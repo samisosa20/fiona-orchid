@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\HeritageController;
 use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,4 +47,5 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::apiResource('/movements', MovementController::class);
     Route::apiResource('/payments', PaymentController::class);
     Route::apiResource('/investments', MovementController::class);
+    Route::get('/report', [ReportController::class, 'report']);
 });
