@@ -62,7 +62,7 @@ class AuthController extends Controller
                 'token' => $token,
                 'currencies' => Currency::get(),
                 'accounts_type' => TypeAccount::get(),
-                'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]]),
+                'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
                 'periods' => CommonTypesController::listPeriodicity(),
             ]);
 
