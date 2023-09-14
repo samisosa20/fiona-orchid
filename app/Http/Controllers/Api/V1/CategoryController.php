@@ -239,15 +239,15 @@ class CategoryController extends Controller
     {
         try {
             $user = auth()->user();
-            $movements = Category::where([
+            $categories = Category::where([
                 ['categories.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
             ])
-            ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(b.name, "\n ", categories.name)) as title, categories.category_id as category_father')
+            ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(categories.name, " (", b.name, ")")) as title, categories.category_id as category_father')
             ->leftJoin('categories as b', 'b.id', 'categories.category_id')
             ->orderBy('categories.name')
             ->get();
-            return response()->json($movements);
+            return response()->json($categories);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
                 'message' =>  'Error al conseguir los datos',

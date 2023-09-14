@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Currency;
+use App\Models\Group;
 use App\Models\TypeAccount;
 
 use App\Controllers\Types\CommonTypesController;
@@ -61,6 +62,7 @@ class AuthController extends Controller
                 'token' => $token,
                 'currencies' => Currency::get(),
                 'accounts_type' => TypeAccount::get(),
+                'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]]),
                 'periods' => CommonTypesController::listPeriodicity(),
             ]);
 
