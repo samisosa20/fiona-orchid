@@ -160,6 +160,12 @@ class UserController extends Controller
                     'password' => Hash::make($request->input('password'))
                 ]);
             }
+            if($request->input('badge_id')) {
+                User::find($user->id)
+                ->update([
+                    'badge_id' => $request->input('badge_id')
+                ]);
+            }
             return response()->json([
                 'message' => 'Datos guardados',
                 'data' => [
