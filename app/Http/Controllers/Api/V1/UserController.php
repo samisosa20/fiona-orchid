@@ -21,9 +21,18 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::get();
+        $user = auth()->user();
 
-        return response()->json($users);
+        $data = User::find($user->id)
+        ->first();
+
+        if($data) {
+            return response()->json($data);
+        }
+        return response([
+            'message' =>  'Datos no encontrados',
+            'detail' => 'La información no existe'
+        ], 400);
     }
 
     /**
@@ -102,15 +111,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show()
     {
         $user = auth()->user();
 
-        $data = User::withTrashed()
-        ->where([
-            ['user_id', $user->id],
-            ['id', $id]
-        ])
+        $data = User::find($user->id)
         ->first();
 
         if($data) {
@@ -137,12 +142,37 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, user $user)
+    public function update(Request $request)
     {
-        //
+        try{
+            $user = auth()->user();
+
+            User::find($user->id)
+            ->update([
+                'name' => $request->input('name'),
+            ]);
+            
+            if($request->input('password')) {
+                User::find($user->id)
+                ->update([
+                    'password' => Hash::make($request->input('password'))
+                ]);
+            }
+            return response()->json([
+                'message' => 'Datos guardados',
+                'data' => [
+                    'name' => $request->input('name'),
+                    'email' => $request->input('email'),
+                ]
+            ]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Datos no guardados',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
     }
 
     /**
