@@ -125,7 +125,7 @@ class EventController extends Controller
         ->join('accounts', 'accounts.id', 'movements.account_id')
         ->join('currencies', 'currencies.id', 'accounts.badge_id')
         ->groupBy('movements.category_id', 'categories.name', 'badge_id', 'currencies.code')
-        ->orderBy('badge_id', 'asc')
+        ->orderByRaw('badge_id, SUM(amount)') 
         ->get();
 
         foreach ($balanceByCategory as &$value) {
