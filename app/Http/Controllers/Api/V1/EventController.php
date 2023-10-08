@@ -105,8 +105,37 @@ class EventController extends Controller
             ['id', $id]
         ])
         ->first();
+
+        $balances = Movement:: where([
+            ['movements.event_id', $id],
+        ])
+        ->selectRaw('currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
+        ->join('accounts', 'accounts.id', 'movements.account_id')
+        ->join('currencies', 'currencies.id', 'accounts.badge_id')
+        ->groupByRaw('currencies.code, badge_id')
+        ->get()
+        ->toArray();
+
+        $balanceByCategory = Movement::where([
+            ['movements.user_id', $user->id],
+            ['movements.event_id', $id]
+        ])
+        ->selectRaw('movements.category_id, categories.name, currencies.code as currency, badge_id, sum(amount) as balance')
+        ->join('categories', 'movements.category_id', '=', 'categories.id')
+        ->join('accounts', 'accounts.id', 'movements.account_id')
+        ->join('currencies', 'currencies.id', 'accounts.badge_id')
+        ->groupBy('movements.category_id', 'categories.name', 'badge_id', 'currencies.code')
+        ->orderBy('badge_id', 'asc')
+        ->get();
+
+        foreach ($balanceByCategory as &$value) {
+            $balanceFilter = array_values(array_filter($balances, fn($v) => $v["currency"] === $value["currency"]));
+
+            $value["percentage"] = round($value["balance"] / $balanceFilter[0]["movements"] * 100,2) . '%';
+        }
+
         if($data) {
-            return response()->json($data);
+            return response()->json(array_merge($data->toArray(), ['categories' => $balanceByCategory]));
         }
         return response([
             'message' =>  'Datos no encontrados',
