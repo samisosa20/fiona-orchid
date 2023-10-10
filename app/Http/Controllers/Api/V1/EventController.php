@@ -231,7 +231,7 @@ class EventController extends Controller
         ->whereDate('end_event', '>=', now())
         ->get();
 
-        foreach ($events as &$event) {
+        /* foreach ($events as &$event) {
             $event->balance = Movement:: where([
                 ['movements.event_id', $event->id],
             ])
@@ -240,7 +240,7 @@ class EventController extends Controller
             ->join('currencies', 'currencies.id', 'accounts.badge_id')
             ->groupByRaw('currencies.code, badge_id')
             ->get();
-        }
+        } */
 
         return response()->json($events);
     }
