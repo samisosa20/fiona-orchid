@@ -99,7 +99,7 @@ class MovementController extends Controller
                 }
 
                 $transfer_id = Category::where([
-                    ['user_id', $request->user()->id],
+                    ['user_id', $user->id],
                     ['group_id', env('GROUP_TRANSFER_ID')]
                 ])
                 ->first();
@@ -112,7 +112,7 @@ class MovementController extends Controller
                     'amount' => abs((float)$request->input('amount')) * -1,
                     'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
                     'date_purchase' => $request->input('date_purchase'),
-                    'user_id' => $request->user()->id,
+                    'user_id' => $user->id,
                 ]);
     
                 // Create in move
@@ -123,7 +123,7 @@ class MovementController extends Controller
                     'amount' => abs((float)$request->input('amount_end')) > 0.0 ? abs((float)$request->input('amount_end')) : abs((float)$request->input('amount')),
                     'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
                     'date_purchase' => $request->input('date_purchase'),
-                    'user_id' => $request->user()->id,
+                    'user_id' => $user->id,
                     'transfer_id' => $movement->id
                 ]);
             }
