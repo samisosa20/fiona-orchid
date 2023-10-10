@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
  
 use App\Models\Movement;
+use App\Models\Category;
 
 class MovementController extends Controller
 {
@@ -74,7 +75,7 @@ class MovementController extends Controller
 
             $user = auth()->user();
 
-            if($request->input('type') === 'move') {
+            if($request->input('type') !== 'transfer') {
                 $movement = Movement::create(array_merge($request->input(), ['user_id' => $user->id]));
             } else {
                 $validator = Validator::make($request->all(), [
@@ -90,26 +91,39 @@ class MovementController extends Controller
                     ], 400)->header('Content-Type', 'json');
                 }
 
-                // Create out move
-                $movement = Movement::create([
+                if($request->input('account_id') === $request->input('account_end_id')) {
+                    return response([
+                        'message' => 'Amount in cant be iqual to Account out.',
+                        'detail' => ''
+                    ], 400)->header('Content-Type', 'json');
+                }
+
+                $transfer_id = Category::where([
+                    ['user_id', $request->user()->id],
+                    ['group_id', env('GROUP_TRANSFER_ID')]
+                ])
+                ->first();
+    
+                 // Create out move
+                 $movement = Movement::create([
                     'account_id' => $request->input('account_id'),
-                    'category_id' => $request->input('category_id'),
+                    'category_id' => $transfer_id->id,
                     'description' => $request->input('description'),
-                    'amount' => $request->input('amount') * -1,
+                    'amount' => abs((float)$request->input('amount')) * -1,
                     'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
                     'date_purchase' => $request->input('date_purchase'),
-                    'user_id' => $user->id,
+                    'user_id' => $request->user()->id,
                 ]);
-
+    
                 // Create in move
                 $movement = Movement::create([
                     'account_id' => $request->input('account_end_id'),
-                    'category_id' => $request->input('category_id'),
+                    'category_id' => $transfer_id->id,
                     'description' => $request->input('description'),
-                    'amount' => $request->input('amount_end') ?? $request->input('amount'),
+                    'amount' => abs((float)$request->input('amount_end')) > 0.0 ? abs((float)$request->input('amount_end')) : abs((float)$request->input('amount')),
                     'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
                     'date_purchase' => $request->input('date_purchase'),
-                    'user_id' => $user->id,
+                    'user_id' => $request->user()->id,
                     'transfer_id' => $movement->id
                 ]);
             }
