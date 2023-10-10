@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
  
 use App\Models\Movement;
 use App\Models\Category;
+use App\Models\Account;
 
 class MovementController extends Controller
 {
@@ -230,22 +231,23 @@ class MovementController extends Controller
 
                 // if out move
                 if(!$movement->transfer_id) {
+                    $accountIn = Account::find($request->input('account_end_id'));
+                    $accountOut = Account::find($request->input('account_id'));
+
                     $outData = [
                         'account_id' => $request->input('account_id'),
-                        'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount') * -1,
-                        'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
+                        'amount' => abs((float)$request->input('amount')) * -1,
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')) : 1,
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $movement->fill($outData)->save();
 
                     $inData = [
                         'account_id' => $request->input('account_end_id'),
-                        'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount_end'),
-                        'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
+                        'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('amount_end')) : abs((float)$request->input('amount')),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount') : 1,
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $outMovement = Movement::where([
@@ -254,22 +256,23 @@ class MovementController extends Controller
 
                     $outMovement ->fill($inData)->save();
                 } else {
+                    $accountIn = Account::find($request->input('account_id'));
+                    $accountOut = Account::find($request->input('account_end_id'));
+
                     $outData = [
                         'account_id' => $request->input('account_end_id'),
-                        'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount_end'),
-                        'trm' => ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount'),
+                        'amount' => $accountIn->badge_id !== $accountOut->badge_id ? abs((float)$request->input('amount_end')) : abs((float)$request->input('amount')),
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? ($request->input('amount_end') ?? $request->input('amount')) / $request->input('amount') : 1,
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $movement->fill($outData)->save();
                     
                     $inData = [
                         'account_id' => $request->input('account_id'),
-                        'category_id' => $request->input('category_id'),
                         'description' => $request->input('description'),
-                        'amount' => $request->input('amount') * -1,
-                        'trm' => $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')),
+                        'amount' => abs((float)$request->input('amount')) * -1,
+                        'trm' => $accountIn->badge_id !== $accountOut->badge_id ? $request->input('amount') / ($request->input('amount_end') ?? $request->input('amount')) : 1,
                         'date_purchase' => $request->input('date_purchase'),
                     ];
                     $inMovement = Movement::where([
