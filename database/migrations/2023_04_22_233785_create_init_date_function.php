@@ -34,7 +34,7 @@ return new class extends Migration
     private function createFunction(): string
     {
         return "
-            CREATE FUNCTION init_date() RETURNS varchar(11)
+            CREATE FUNCTION init_date() RETURNS varchar(20)
                 NO SQL
                 DETERMINISTIC
             return @init_date
