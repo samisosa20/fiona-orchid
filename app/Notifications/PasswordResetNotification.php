@@ -11,6 +11,8 @@ class PasswordResetNotification extends Notification
 {
     use Queueable;
 
+    private $new_password;
+
     /**
      * Create a new notification instance.
      */
