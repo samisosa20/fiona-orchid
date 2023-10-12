@@ -151,7 +151,7 @@ class MovementController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $data = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn'])
+        $data = Movement::with(['account', 'category', 'event', 'transferOut', 'transferIn', 'investment'])
         ->where([
             ['user_id', $user->id],
             ['id', $id]
