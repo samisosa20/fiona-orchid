@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\MovementController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\InvestmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +49,7 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/heritages-list', [HeritageController::class, 'listYear']);
     Route::apiResource('/movements', MovementController::class);
     Route::apiResource('/payments', PaymentController::class);
-    Route::apiResource('/investments', MovementController::class);
+    Route::apiResource('/investments', InvestmentController::class);
     Route::get('/report', [ReportController::class, 'report']);
     Route::get('/report/category', [ReportController::class, 'movementsByCategory']);
     Route::get('/report/group', [ReportController::class, 'movementsByGroup']);
