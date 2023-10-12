@@ -21,6 +21,7 @@ class PaymentController extends Controller
         $payments = PlannedPayment::where([
             ['user_id', $user->id]
         ])
+        ->with(['account', 'category'])
         ->get();
 
         return response()->json($payments);
@@ -105,9 +106,11 @@ class PaymentController extends Controller
             ['id', $id]
         ])
         ->first();
+
         if($data) {
             return response()->json($data);
         }
+        
         return response([
             'message' =>  'Datos no encontrados',
             'detail' => 'La información no existe'
