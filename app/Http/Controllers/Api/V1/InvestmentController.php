@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
  
 use App\Models\Investment;
+use App\Models\Movement;
 
 class InvestmentController extends Controller
 {
@@ -18,12 +19,44 @@ class InvestmentController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $payments = Investment::where([
+        $investments = Investment::where([
             ['user_id', $user->id]
         ])
+        ->with('currency')
         ->get();
 
-        return response()->json($payments);
+        $balances = Investment::where([
+            ['user_id', $user->id]
+        ])
+        ->selectRaw('currencies.code as currency, badge_id, sum(end_amount - init_amount) as valuation, sum(end_amount) as amount')
+        ->join('currencies', 'currencies.id', 'investments.badge_id')
+        ->groupByRaw('currencies.code, badge_id')
+        ->get();
+
+        foreach ($balances as &$value) {
+            $value->profit = Movement:: where([
+                ['movements.user_id', $user->id],
+                ['currencies.id', $value->badge_id],
+                ])
+                ->whereNotNull('investment_id')
+                ->join('accounts', 'accounts.id', 'movements.account_id')
+                ->join('currencies', 'currencies.id', 'accounts.badge_id')
+                ->sum('amount') * 1;
+        }
+        
+        foreach ($investments as &$investment) {
+            $investment->returns = Movement:: where([
+                ['movements.investment_id', $investment->id],
+            ])
+            ->sum('amount') * 1;
+            $investment->valorization = round(($investment->end_amount - $investment->init_amount) / $investment->init_amount * 100, 2)."%";
+            $investment->total_rate = round(($investment->end_amount - $investment->init_amount + $investment->returns) / $investment->init_amount * 100, 2)."%";
+        }
+
+        return response()->json([
+            'investments' => $investments,
+            'balances' => $balances
+        ]);
     }
 
     /**
@@ -100,7 +133,7 @@ class InvestmentController extends Controller
             ['user_id', $user->id],
             ['id', $id]
         ])
-        ->with('currency')
+        ->with(['currency', 'movements'])
         ->first();
 
         if($data) {
