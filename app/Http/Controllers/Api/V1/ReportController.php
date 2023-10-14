@@ -22,27 +22,9 @@ class ReportController extends Controller
             $currency = $request->query('badge_id') ?? auth()->user()->badge_id;
 
             return [
-                'incomes' => [
-                    [
-                        'name'   => 'Incomes',
-                        'values' => array_map(fn ($v) => $v['amount'], $data['incomes']->toArray()),
-                        'labels' => array_map(fn ($v) => $v['category'], $data['incomes']->toArray()),
-                    ]
-                ],
-                'expensives' => [
-                    [
-                        'name'   => 'Expensives',
-                        'values' => array_map(fn ($v) => is_array($v) ? $v['amount'] : $v->amount, $data['main_expensive']->toArray()),
-                        'labels' => array_map(fn ($v) => is_array($v) ? $v['category'] : $v->category, $data['main_expensive']->toArray()),
-                    ]
-                ],
-                'balances' => [
-                    [
-                        'name'   => 'Expensives',
-                        'values' => array_map(fn ($v) => $v->amount, $data['balances']),
-                        'labels' => array_map(fn ($v) => $v->date, $data['balances']),
-                    ]
-                ],
+                'incomes' => $data['incomes'],
+                'expensives' =>  $data['main_expensive'],
+                'balances' => $data['balances'],
                 'group_expensive' => $data['group_expensive'],
                 'list_expensives' => $data['list_expensives'],
                 'list_incomes' => $data['incomes'],
