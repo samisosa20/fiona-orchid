@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Heritage;
 use App\Models\Movement;
 use App\Models\Account;
+use App\Models\Investment;
 
 class HeritageController extends Controller
 {
@@ -30,7 +31,37 @@ class HeritageController extends Controller
         ->orderBy('year', 'desc')
         ->get();
 
-        return response()->json($heritages);
+        $investments = Investment::selectRaw('code, SUM(end_amount) as total_end_amount')
+        ->join('currencies', 'currencies.id', 'investments.badge_id')
+
+        ->where([
+            ['investments.user_id', $user->id]
+        ])
+        ->when($request->query('year'), function ($query) use ($request) {
+            $query->whereYear('investments.date_investment', '<=', $request->query('year'));
+        })
+        ->groupBy('code')
+        ->get();
+
+
+        $movements = Movement::selectRaw('code, SUM(amount) as total_amount')
+        ->join('accounts', 'accounts.id', 'movements.account_id')
+                ->join('currencies', 'currencies.id', 'accounts.badge_id')
+        ->where([
+            ['movements.user_id', $user->id]
+        ])
+        ->when($request->query('year'), function ($query) use ($request) {
+            $query->whereYear('movements.date_purchase', $request->query('year'));
+        })
+        ->groupBy('code')
+        ->get();
+
+
+        return response()->json([
+            'heritages' => $heritages,
+            'investments' => $investments,
+            'balances' => $movements
+        ]);
     }
 
     /**
@@ -205,20 +236,24 @@ class HeritageController extends Controller
             $value->balance = Movement::where([
                 ['movements.user_id', auth()->user()->id],
             ])
-            ->whereYear('date_purchase', '=', $value->year)
-            ->selectRaw('year(date_purchase) as year, currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
+            ->whereYear('date_purchase', '<=', $value->year)
+            ->selectRaw('currencies.code as currency, badge_id, ifnull(sum(amount), 0) as movements')
             ->join('accounts', 'accounts.id', 'movements.account_id')
             ->join('currencies', 'currencies.id', 'accounts.badge_id')
-            ->groupByRaw('year(date_purchase), currencies.code, badge_id')
+            ->join('categories', 'movements.category_id', 'categories.id')
+            ->groupByRaw('currencies.code, badge_id')
             ->get();
 
+            // get information by currency code
             foreach ($value->balance  as &$balance) {
-                $init_amout = Account::where([
+
+                $init_amout = Account::withTrashed()
+                ->where([
                     ['user_id', auth()->user()->id],
                     ['badge_id', $balance->badge_id],
                 ])
                 ->selectRaw('sum(init_amount) as amount')
-                ->whereNull('deleted_at')
+                ->whereYear('created_at', '<=', $value->year)
                 ->first();
                 
                 $comercial_amount = Heritage::where([
@@ -226,10 +261,22 @@ class HeritageController extends Controller
                     ['year', $value->year],
                     ['badge_id', $balance->badge_id],
                 ])
-                ->selectRaw('cast(ifnull(sum(comercial_amount), 0) as float) as comercial_amount')
+                ->selectRaw('ifnull(sum(comercial_amount), 0) as comercial_amount')
+                ->first();
+                
+                $investments = Investment::where([
+                    ['user_id', auth()->user()->id],
+                    ['badge_id', $balance->badge_id],
+                ])
+                ->selectRaw('ifnull(sum(end_amount), 0) as amount')
+                ->whereYear('date_investment', '<=', $value->year)
                 ->first();
 
-                $balance->amount = $comercial_amount->comercial_amount + $balance->movements + $init_amout->amount;
+
+                $balance->comercial_amount = $comercial_amount->comercial_amount;
+                $balance->investments = $investments->amount;
+
+                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments->amount, 2);
             }
         }
 

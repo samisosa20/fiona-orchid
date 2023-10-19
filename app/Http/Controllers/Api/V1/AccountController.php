@@ -212,7 +212,7 @@ class AccountController extends Controller
         try {
             $account->delete();
             return response()->json([
-                'message' => 'Cuenta inactivada exitosamente',
+                'message' => 'Cuenta Inactivada exitosamente',
                 'data' => $account,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
@@ -235,6 +235,29 @@ class AccountController extends Controller
             $account = Account::withTrashed()->find($id)->restore();
             return response()->json([
                 'message' => 'Cuenta Activada exitosamente',
+                'data' => $account,
+            ]);
+        } catch(\Illuminate\Database\QueryException $ex){
+            return response([
+                'message' =>  'Datos no guardados',
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
+    
+    /**
+     * Restore the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function hardDestory($id)
+    {
+        try {
+            $account = Account::withTrashed()->find($id);
+            $account->forceDelete();
+            return response()->json([
+                'message' => 'Cuenta Eliminada exitosamente',
                 'data' => $account,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){

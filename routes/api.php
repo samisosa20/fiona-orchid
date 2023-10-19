@@ -38,6 +38,8 @@ Route::prefix('v1')->group(function () {
 // Private routes
 Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::apiResource('/accounts', AccountController::class);
+    Route::post('/accounts/restore/{id}', [AccountController::class, 'restore']);
+    Route::delete('/accounts/delete/{id}', [AccountController::class, 'hardDestory']);
     Route::apiResource('/budgets', BudgetController::class);
     Route::get('/budgets-list', [BudgetController::class, 'listYear']);
     Route::get('/budgets-report', [BudgetController::class, 'reportBudget']);
