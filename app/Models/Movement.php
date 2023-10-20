@@ -32,6 +32,7 @@ class Movement extends Model
         'event_id',
         'investment_id',
         'user_id',
+        'add_withdrawal',
     ];
 
     /**
@@ -59,6 +60,7 @@ class Movement extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
         'amount' => 'float',
         'trm' => 'float',
+        'add_withdrawal' => 'boolean',
     ];
 
     public function user()
