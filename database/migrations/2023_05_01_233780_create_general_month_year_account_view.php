@@ -34,7 +34,7 @@ return new class extends Migration
     private function createView(): string
     {
         return "
-            CREATE VIEW general_month_year_account AS
+            CREATE OR REPLACE VIEW general_month_year_account AS
             with get_amount_month as (
                 SELECT code , if(month(a.created_at) = month(now()) and year(a.created_at) = year(now()), a.init_amount, 0) as init_amount, (select ifnull(sum(amount), 0) from movements where account_id = a.id and month(date_purchase) = month(now()) and year(date_purchase) = year(now())) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)

@@ -34,7 +34,7 @@ return new class extends Migration
     private function createView(): string
     {
         return "
-            CREATE VIEW report_global_balance AS
+            CREATE OR REPLACE VIEW report_global_balance AS
             WITH getValueByDate AS (
                 select DATE_FORMAT(date_purchase, \"%b-01\") as date, round(ifnull(sum(amount),0), 2) as amount from movements
                 join accounts on accounts.id = movements.account_id

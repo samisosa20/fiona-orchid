@@ -34,7 +34,7 @@ return new class extends Migration
     private function createView(): string
     {
         return "
-            CREATE VIEW report_open_close_balance AS
+            CREATE OR REPLACE VIEW report_open_close_balance AS
             with get_open_move as (
                 select ifnull(sum(amount), 0) as open_move from movements 
                 join accounts on (accounts.id = account_id)
