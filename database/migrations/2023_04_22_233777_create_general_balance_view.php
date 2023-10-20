@@ -38,7 +38,7 @@ return new class extends Migration
             with get_amount as (
                 SELECT code , a.init_amount, (select ifnull(sum(amount), 0) from movements where account_id = a.id) as balance from accounts a
                 join currencies b on (a.badge_id = b.id)
-                where a.user_id = user_id() and a.deleted_at is null
+                where a.user_id = user_id()
             ), sum_amount as (
                 select code as currency, sum(init_amount + balance) as balance from get_amount 
                 group by code

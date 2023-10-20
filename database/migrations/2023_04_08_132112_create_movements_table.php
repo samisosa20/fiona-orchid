@@ -33,7 +33,7 @@ return new class extends Migration
             ->references('id')
             ->on('movements')
             ->onUpdate('cascade')
-            ->onDelete('cascade');
+            ->onDelete('set null');
             $table->unsignedBigInteger('event_id')->nullable();
             $table->foreign('event_id')
             ->references('id')

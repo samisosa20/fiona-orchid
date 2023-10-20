@@ -46,10 +46,10 @@ return new class extends Migration
                 join accounts on (accounts.id = account_id)
                 inner join `currencies` on `badge_id` = `currencies`.`id` 
                 where movements.user_id = user_id() and date(date_purchase) < init_date() 
-                and badge_id = currency() and accounts.deleted_at is null
+                and badge_id = currency()
             ), init_money AS (
                 SELECT DATE_FORMAT(init_date(), \"%b-%d\") as date, SUM(IFNULL(init_amount, 0)) AS init_amount from accounts
-                where user_id = user_id() and badge_id = currency() and deleted_at is null
+                where user_id = user_id() and badge_id = currency()
                 and date(created_at) < init_date()
             ), getDate AS (
                 SELECT DATE_FORMAT(db_date, '%b-%d') AS date, day, month FROM time_dimension WHERE db_date BETWEEN init_date() and end_date() and day = 1 order by month
