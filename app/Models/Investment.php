@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 use App\Models\Movement;
 use App\Models\Currency;
+use App\Models\InvestmentAppreciation;
 
 class Investment extends Model
 {
@@ -58,6 +59,11 @@ class Investment extends Model
     public function movements()
     {
         return $this->hasMany(Movement::class, 'investment_id', 'id')->with(['account', 'category', 'event', 'transferIn', 'transferOut']);
+    }
+    
+    public function appreciations()
+    {
+        return $this->hasMany(InvestmentAppreciation::class, 'investment_id', 'id');
     }
 
     public function currency()

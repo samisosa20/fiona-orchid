@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
  
-use App\Models\Investment;
-use App\Models\Movement;
+use App\Models\InvestmentAppreciation;
 
-class InvestmentController extends Controller
+class AppretiationController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,45 +17,13 @@ class InvestmentController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
-        $investments = Investment::where([
-            ['user_id', $user->id]
+        $appretiations = InvestmentAppreciation::where([
+            ['user_id', auth()->user()->id]
         ])
-        ->with('currency')
+        ->with('investment')
         ->get();
 
-        $balances = Investment::where([
-            ['user_id', $user->id]
-        ])
-        ->selectRaw('currencies.code as currency, badge_id, sum(end_amount - init_amount) as valuation, sum(end_amount) as amount')
-        ->join('currencies', 'currencies.id', 'investments.badge_id')
-        ->groupByRaw('currencies.code, badge_id')
-        ->get();
-
-        foreach ($balances as &$value) {
-            $value->profit = Movement:: where([
-                ['movements.user_id', $user->id],
-                ['currencies.id', $value->badge_id],
-                ])
-                ->whereNotNull('investment_id')
-                ->join('accounts', 'accounts.id', 'movements.account_id')
-                ->join('currencies', 'currencies.id', 'accounts.badge_id')
-                ->sum('amount') * 1;
-        }
-        
-        foreach ($investments as &$investment) {
-            $investment->returns = Movement:: where([
-                ['movements.investment_id', $investment->id],
-            ])
-            ->sum('amount') * 1;
-            $investment->valorization = round(($investment->end_amount - $investment->init_amount) / $investment->init_amount * 100, 2)."%";
-            $investment->total_rate = round(($investment->end_amount - $investment->init_amount + $investment->returns) / $investment->init_amount * 100, 2)."%";
-        }
-
-        return response()->json([
-            'investments' => $investments,
-            'balances' => $balances
-        ]);
+        return response()->json($appretiations);
     }
 
     /**
@@ -79,19 +46,13 @@ class InvestmentController extends Controller
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'investment_id' => [
                     'required',
                 ],
-                'init_amount' => [
+                'amount' => [
                     'required',
                 ],
-                'end_amount' => [
-                    'required',
-                ],
-                'badge_id' => [
-                    'required',
-                ],
-                'date_investment' => [
+                'date_appreciation' => [
                     'required',
                     'date_format:Y-m-d'
                 ],
@@ -106,10 +67,10 @@ class InvestmentController extends Controller
 
             $user = auth()->user();
 
-            $payment = Investment::create(array_merge($request->input(), ['user_id' => $user->id]));
+            $payment = InvestmentAppreciation::create(array_merge($request->input(), ['user_id' => $user->id]));
 
             return response()->json([
-                'message' => 'Inversion creada exitosamente',
+                'message' => 'Valorizacion creada exitosamente',
                 'data' => $payment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
@@ -128,12 +89,11 @@ class InvestmentController extends Controller
      */
     public function show($id)
     {
-        $user = auth()->user();
-        $data = Investment::where([
-            ['user_id', $user->id],
-            ['id', $id]
+        $data = InvestmentAppreciation::where([
+            ['user_id', auth()->user()->id],
+            ['investment_id', $id]
         ])
-        ->with(['currency', 'movements', 'appreciations'])
+        ->with(['investment'])
         ->first();
 
         if($data) {
@@ -149,10 +109,10 @@ class InvestmentController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Investment  $payment
+     * @param  \App\Models\InvestmentAppreciation  $payment
      * @return \Illuminate\Http\Response
      */
-    public function edit(Investment $payment)
+    public function edit(InvestmentAppreciation $payment)
     {
         //
     }
@@ -161,26 +121,20 @@ class InvestmentController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Investment  $investment
+     * @param  \App\Models\InvestmentAppreciation  $investment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Investment $investment)
+    public function update(Request $request, InvestmentAppreciation $investment)
     {
         try{
             $validator = Validator::make($request->all(), [
-                'name' => [
+                'investment_id' => [
                     'required',
                 ],
-                'init_amount' => [
+                'amount' => [
                     'required',
                 ],
-                'end_amount' => [
-                    'required',
-                ],
-                'badge_id' => [
-                    'required',
-                ],
-                'date_investment' => [
+                'date_appreciation' => [
                     'required',
                     'date_format:Y-m-d'
                 ],
@@ -196,7 +150,7 @@ class InvestmentController extends Controller
             $investment->fill($request->input())->save();
 
             return response()->json([
-                'message' => 'Inversion editada exitosamente',
+                'message' => 'Valorizacion editada exitosamente',
                 'data' => $investment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){
@@ -213,12 +167,12 @@ class InvestmentController extends Controller
      * @param  \App\Models\Investment  $investment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Investment $investment)
+    public function destroy(InvestmentAppreciation $investment)
     {
         try {
             $investment->delete();
             return response()->json([
-                'message' => 'Inversion eliminada exitosamente',
+                'message' => 'Valorizacion eliminada exitosamente',
                 'data' => $investment,
             ]);
         } catch(\Illuminate\Database\QueryException $ex){

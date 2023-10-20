@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\InvestmentController;
+use App\Http\Controllers\Api\V1\AppretiationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,5 +56,6 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/report', [ReportController::class, 'report']);
     Route::get('/report/category', [ReportController::class, 'movementsByCategory']);
     Route::get('/report/group', [ReportController::class, 'movementsByGroup']);
+    Route::apiResource('/appretiations', AppretiationController::class);
     Route::apiResource('/profile', UserController::class);
 });

@@ -22,7 +22,7 @@ class AccountController extends Controller
     {
         $user = auth()->user();
         $accounts = Account::withTrashed()
-        ->with(['currency'])
+        ->with(['currency', 'type'])
         ->withBalance()
         ->where([
             ['user_id', $user->id]
