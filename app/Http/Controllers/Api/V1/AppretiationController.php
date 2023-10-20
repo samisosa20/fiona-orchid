@@ -147,7 +147,7 @@ class AppretiationController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $investment->fill($request->input())->save();
+            $investment->fill(array_merge($request->input(), ['user_id' => auth()->user()->id]))->save();
 
             return response()->json([
                 'message' => 'Valorizacion editada exitosamente',
