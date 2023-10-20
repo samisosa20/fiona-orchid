@@ -309,7 +309,7 @@ class MovementController extends Controller
             if($movement->transfer_id){
                 // if is transfer and is in movevemt so delete out movement
                 Movement::find($movement->transfer_id)->delete();
-            } else if($movement->category_id === $user->transfer_id) {
+            } else if($movement->category_id === $user->transferId->id) {
                 // if is transfer and is out movevemt so delete in movement
                 Movement::where([
                     ['transfer_id', $movement->id]
