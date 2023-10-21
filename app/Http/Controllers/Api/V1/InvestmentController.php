@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
  
 use App\Models\Investment;
 use App\Models\Movement;
-
+use App\Models\InvestmentAppreciation;
 class InvestmentController extends Controller
 {
     /**
@@ -47,10 +47,31 @@ class InvestmentController extends Controller
         foreach ($investments as &$investment) {
             $investment->returns = Movement:: where([
                 ['movements.investment_id', $investment->id],
+                ['add_withdrawal', false]
             ])
             ->sum('amount') * 1;
-            $investment->valorization = round(($investment->end_amount - $investment->init_amount) / $investment->init_amount * 100, 2)."%";
-            $investment->total_rate = round(($investment->end_amount - $investment->init_amount + $investment->returns) / $investment->init_amount * 100, 2)."%";
+            
+            $investment->add_withdrawal = Movement:: where([
+                ['movements.investment_id', $investment->id],
+                ['add_withdrawal', true]
+            ])
+            ->selectRaw('sum(amount * -1) as amount')
+            ->first()
+            ->amount * 1;
+
+            $appretiation = InvestmentAppreciation::where([
+                ['investment_id', $investment->id]
+            ])
+            ->orderBy('date_appreciation', 'desc')
+            ->first();
+
+            $end_amount = $appretiation->amount ?? $investment->init_amount;
+            $investment->end_amount = $end_amount;
+
+            $total_add_withdrawal = $investment->init_amount + $investment->add_withdrawal;
+
+            $investment->valorization = round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2)."%";
+            $investment->total_rate = round(($end_amount + $investment->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2)."%";
         }
 
         return response()->json([
@@ -135,6 +156,34 @@ class InvestmentController extends Controller
         ])
         ->with(['currency', 'movements', 'appreciations'])
         ->first();
+
+        $data->returns = Movement:: where([
+            ['movements.investment_id', $data->id],
+            ['add_withdrawal', false]
+        ])
+        ->sum('amount') * 1;
+        
+        $data->add_withdrawal = Movement:: where([
+            ['movements.investment_id', $data->id],
+            ['add_withdrawal', true]
+        ])
+        ->selectRaw('sum(amount * -1) as amount')
+        ->first()
+        ->amount * 1;
+
+        $appretiation = InvestmentAppreciation::where([
+            ['investment_id', $data->id]
+        ])
+        ->orderBy('date_appreciation', 'desc')
+        ->first();
+
+        $end_amount = $appretiation->amount ?? $data->init_amount;
+        $data->end_amount = $end_amount;
+
+        $total_add_withdrawal = $data->init_amount + $data->add_withdrawal;
+
+        $data->valorization = round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2)."%";
+        $data->total_rate = round(($end_amount + $data->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2)."%";
 
         if($data) {
             return response()->json($data);
