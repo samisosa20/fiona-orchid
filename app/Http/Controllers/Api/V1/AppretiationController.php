@@ -165,13 +165,13 @@ class AppretiationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\InvestmentAppreciation  $investment
+     * @param  int  $investment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(InvestmentAppreciation $investment)
+    public function destroy($investment)
     {
         try {
-            $investment->delete();
+            InvestmentAppreciation::find($investment)->delete();
             return response()->json([
                 'message' => 'Valorizacion eliminada exitosamente',
                 'data' => $investment,
