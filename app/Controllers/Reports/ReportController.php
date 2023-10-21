@@ -208,7 +208,7 @@ class ReportController extends Controller
                 ['badge_id', $currency],
             ])
             ->withBalance()
-            ->whereHas('type', fn ($query) => $query->where('name', '=', 'Credit Card'))
+            ->whereHas('type', fn ($query) => $query->where('id', '=', 3))
             ->get();
 
             return [
