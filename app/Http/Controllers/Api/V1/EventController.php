@@ -109,7 +109,7 @@ class EventController extends Controller
         $balances = Movement:: where([
             ['movements.event_id', $id],
         ])
-        ->selectRaw('currencies.code as currency, badge_id, cast(ifnull(sum(amount), 0) as float) as movements')
+        ->selectRaw('currencies.code as currency, badge_id, ifnull(sum(amount), 0) as movements')
         ->join('accounts', 'accounts.id', 'movements.account_id')
         ->join('currencies', 'currencies.id', 'accounts.badge_id')
         ->groupByRaw('currencies.code, badge_id')
@@ -131,7 +131,9 @@ class EventController extends Controller
         foreach ($balanceByCategory as &$value) {
             $balanceFilter = array_values(array_filter($balances, fn($v) => $v["currency"] === $value["currency"]));
 
-            $value["percentage"] = round($value["balance"] / $balanceFilter[0]["movements"] * 100,2) . '%';
+            $percentage = round($value["balance"] / $balanceFilter[0]["movements"] * 100,2) ;
+
+            $value["percentage"] = $percentage > 100 ? '100%' : abs($percentage) .'%';
         }
 
         if($data) {
