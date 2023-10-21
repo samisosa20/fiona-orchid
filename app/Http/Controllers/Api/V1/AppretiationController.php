@@ -121,11 +121,12 @@ class AppretiationController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\InvestmentAppreciation  $investment
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, InvestmentAppreciation $investment)
+    public function update(Request $request, $id)
     {
+        $investment = InvestmentAppreciation::find($id);
         try{
             $validator = Validator::make($request->all(), [
                 'investment_id' => [
@@ -164,7 +165,7 @@ class AppretiationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Investment  $investment
+     * @param  \App\Models\InvestmentAppreciation  $investment
      * @return \Illuminate\Http\Response
      */
     public function destroy(InvestmentAppreciation $investment)

@@ -53,9 +53,9 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::apiResource('/movements', MovementController::class);
     Route::apiResource('/payments', PaymentController::class);
     Route::apiResource('/investments', InvestmentController::class);
+    Route::apiResource('/appretiations', AppretiationController::class);
     Route::get('/report', [ReportController::class, 'report']);
     Route::get('/report/category', [ReportController::class, 'movementsByCategory']);
     Route::get('/report/group', [ReportController::class, 'movementsByGroup']);
-    Route::apiResource('/appretiations', AppretiationController::class);
     Route::apiResource('/profile', UserController::class);
 });
