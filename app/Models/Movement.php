@@ -113,6 +113,12 @@ class Movement extends Model
         ->when($request->query('date'), function ($query) use ($request) {
             $query->whereDate('date_purchase', '=' , $request->query('date'));
         })
+        ->when($request->query('start_date'), function ($query) use ($request) {
+            $query->whereDate('date_purchase', '>=' , $request->query('start_date'));
+        })
+        ->when($request->query('end_date'), function ($query) use ($request) {
+            $query->whereDate('date_purchase', '<=' , $request->query('end_date'));
+        })
         ->when($request->query('event_id'), function ($query) use ($request) {
             $query->whereHas('event', function($query) use ($request){
                 $query->where('id', '=', $request->query('event_id'));
