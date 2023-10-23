@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Heritage;
 use App\Models\Movement;
 use App\Models\Account;
-use App\Models\Investment;
+use App\Models\InvestmentAppreciation;
 
 class HeritageController extends Controller
 {
@@ -31,14 +31,14 @@ class HeritageController extends Controller
         ->orderBy('year', 'desc')
         ->get();
 
-        $investments = Investment::selectRaw('code, SUM(end_amount) as total_end_amount')
+        $investments = InvestmentAppreciation::selectRaw('code, SUM(amount) as total_end_amount')
+        ->join('investments', 'investments.id', 'investment_appreciations.investment_id')
         ->join('currencies', 'currencies.id', 'investments.badge_id')
-
         ->where([
-            ['investments.user_id', $user->id]
+            ['investment_appreciations.user_id', $user->id]
         ])
         ->when($request->query('year'), function ($query) use ($request) {
-            $query->whereYear('investments.date_investment', '<=', $request->query('year'));
+            $query->whereYear('investment_appreciations.date_appreciation', '<=', $request->query('year'));
         })
         ->groupBy('code')
         ->get();
@@ -281,12 +281,16 @@ class HeritageController extends Controller
                 ->selectRaw('ifnull(sum(comercial_amount), 0) as comercial_amount')
                 ->first();
                 
-                $investments = Investment::where([
+                $investments = InvestmentAppreciation::where([
                     ['user_id', auth()->user()->id],
-                    ['badge_id', $balance->badge_id],
-                ])
-                ->selectRaw('ifnull(sum(end_amount), 0) as amount')
-                ->whereYear('date_investment', '<=', $value->year)
+                    ])
+                    ->whereHas('investment', function ($query) use ($balance) {
+                        $query->where([
+                        ['badge_id', $balance->badge_id],
+                        ]);
+                })
+                ->selectRaw('ifnull(sum(amount), 0) as amount')
+                ->whereYear('date_appreciation', '<=', $value->year)
                 ->first();
 
 
