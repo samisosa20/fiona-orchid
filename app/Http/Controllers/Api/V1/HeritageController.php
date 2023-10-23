@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
  
 use App\Models\Heritage;
 use App\Models\Movement;
 use App\Models\Account;
 use App\Models\InvestmentAppreciation;
+use App\Models\Investment;
 
 class HeritageController extends Controller
 {
@@ -31,16 +33,13 @@ class HeritageController extends Controller
         ->orderBy('year', 'desc')
         ->get();
 
-        $investments = InvestmentAppreciation::selectRaw('code, SUM(amount) as total_end_amount')
-        ->join('investments', 'investments.id', 'investment_appreciations.investment_id')
-        ->join('currencies', 'currencies.id', 'investments.badge_id')
-        ->where([
-            ['investment_appreciations.user_id', $user->id]
-        ])
-        ->when($request->query('year'), function ($query) use ($request) {
-            $query->whereYear('investment_appreciations.date_appreciation', '<=', $request->query('year'));
+        $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as amount'))
+        ->leftJoin('investment_appreciations', function($join) {
+            $join->on('investment_appreciations.investment_id', '=', 'investments.id')
+                 ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
         })
-        ->groupBy('code')
+        ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
+        ->groupBy('currencies.code')
         ->get();
 
 
@@ -281,23 +280,22 @@ class HeritageController extends Controller
                 ->selectRaw('ifnull(sum(comercial_amount), 0) as comercial_amount')
                 ->first();
                 
-                $investments = InvestmentAppreciation::where([
-                    ['user_id', auth()->user()->id],
-                    ])
-                    ->whereHas('investment', function ($query) use ($balance) {
-                        $query->where([
-                        ['badge_id', $balance->badge_id],
-                        ]);
+                $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as amount'))
+                ->leftJoin('investment_appreciations', function($join) {
+                    $join->on('investment_appreciations.investment_id', '=', 'investments.id')
+                         ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
                 })
-                ->selectRaw('ifnull(sum(amount), 0) as amount')
-                ->whereYear('date_appreciation', '<=', $value->year)
-                ->first();
-
+                ->where([
+                    ['badge_id', $balance->badge_id],
+                ])
+                ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
+                ->groupBy('currencies.code')
+                ->get();
 
                 $balance->comercial_amount = $comercial_amount->comercial_amount;
-                $balance->investments = $investments->amount;
+                $balance->investments = $investments[0]->amount;
 
-                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments->amount, 2);
+                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments[0]->amount, 2);
             }
         }
 
