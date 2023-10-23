@@ -85,7 +85,7 @@ class ReportController extends Controller
             ->join('accounts', 'account_id', 'accounts.id')
             ->join('currencies', 'badge_id', 'currencies.id')
             ->groupBy('categories.id','categories.name')
-            ->orderByRaw('ifnull(sum(amount), 0) desc')
+            ->orderByRaw('ifnull(sum(amount), 0)')
             ->get();
             
             $expensives_transfer = Movement::where([
