@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Heritage;
 use App\Models\Movement;
 use App\Models\Account;
-use App\Models\InvestmentAppreciation;
 use App\Models\Investment;
 
 class HeritageController extends Controller
@@ -75,7 +74,7 @@ class HeritageController extends Controller
 
         return response()->json([
             'heritages' => $heritages,
-            'investments' => $investments,
+            'investments' => $investments->transform(function ($investment) {$investment->amount = (float) $investment->amount; return $investment;}),
             'balances' => $movements
         ]);
     }
@@ -293,7 +292,7 @@ class HeritageController extends Controller
                 ->get();
 
                 $balance->comercial_amount = $comercial_amount->comercial_amount;
-                $balance->investments = $investments[0]->amount;
+                $balance->investments = (float)$investments[0]->amount;
 
                 $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments[0]->amount, 2);
             }
