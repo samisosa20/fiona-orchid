@@ -32,7 +32,7 @@ class HeritageController extends Controller
         ->orderBy('year', 'desc')
         ->get();
 
-        $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as amount'))
+        $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as total_end_amount'))
         ->leftJoin('investment_appreciations', function($join) {
             $join->on('investment_appreciations.investment_id', '=', 'investments.id')
                  ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
@@ -74,7 +74,7 @@ class HeritageController extends Controller
 
         return response()->json([
             'heritages' => $heritages,
-            'investments' => $investments->transform(function ($investment) {$investment->amount = (float) $investment->amount; return $investment;}),
+            'investments' => $investments->transform(function ($investment) {$investment->total_end_amount = (float) $investment->total_end_amount; return $investment;}),
             'balances' => $movements
         ]);
     }
@@ -279,7 +279,7 @@ class HeritageController extends Controller
                 ->selectRaw('ifnull(sum(comercial_amount), 0) as comercial_amount')
                 ->first();
                 
-                $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as amount'))
+                $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as total_end_amount'))
                 ->leftJoin('investment_appreciations', function($join) {
                     $join->on('investment_appreciations.investment_id', '=', 'investments.id')
                          ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
@@ -292,9 +292,9 @@ class HeritageController extends Controller
                 ->get();
 
                 $balance->comercial_amount = $comercial_amount->comercial_amount;
-                $balance->investments = (float)$investments[0]->amount;
+                $balance->investments = (float)$investments[0]->total_end_amount;
 
-                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments[0]->amount, 2);
+                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments[0]->total_end_amount, 2);
             }
         }
 
