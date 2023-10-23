@@ -114,6 +114,21 @@ class AccountController extends Controller
         if($data) {
             $balance = ReportController::balanceByAccount($request, $data->id);
 
+            $movements = Movement::where([
+                ['account_id', $data->id],
+                ['user_id', auth()->user()->id],
+            ])
+            ->filters()
+            ->filter($request)
+            ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
+            ->orderBy('date_purchase', 'desc');
+
+            if($request->query('end_date')){
+                $listMovements['data'] = $movements->get();
+            } else {
+                $listMovements = $movements->paginate(50);
+            }
+
             return response()->json([
                 'balancesAccount' => [
                     [
@@ -123,15 +138,7 @@ class AccountController extends Controller
                     ]
                 ],
                 'account' => $data,
-                'movements' => Movement::where([
-                    ['account_id', $data->id],
-                    ['user_id', auth()->user()->id],
-                ])
-                ->filters()
-                ->filter($request)
-                ->with(['account', 'category', 'event', 'transferOut', 'transferIn'])
-                ->orderBy('date_purchase', 'desc')
-                ->paginate(50),
+                'movements' => $listMovements,
                 'balances' => AccountControl::totalBalanceByAccount($data),
             ]);
         }
