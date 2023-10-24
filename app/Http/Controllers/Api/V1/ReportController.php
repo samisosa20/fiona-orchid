@@ -128,6 +128,7 @@ class ReportController extends Controller
             })
             ->selectRaw('category_id, sum(amount) as amount')
             ->groupBy('category_id')
+            ->orderByRaw('sum(amount) ASC')
             ->get();
 
             return $movements;
