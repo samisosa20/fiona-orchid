@@ -113,7 +113,10 @@ class ReportController extends Controller
             $movements = Movement::where([
                 ['movements.user_id', auth()->user()->id],
             ])
-            ->with(['account', 'event', 'category'])
+            ->with(['account', 'event'])
+            ->with('category', function ($query) {
+                $query->with('categoryFather');
+            })
             ->whereDate('date_purchase', '>=', $init_date)
             ->whereDate('date_purchase', '<=', $end_date)
             ->whereHas('category', function ($query) use($request){
