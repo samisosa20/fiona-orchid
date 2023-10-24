@@ -33,9 +33,10 @@ class HeritageController extends Controller
         ->get();
 
         $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as total_end_amount'))
-        ->leftJoin('investment_appreciations', function($join) {
+        ->leftJoin('investment_appreciations', function($join) use ($request) {
+            $year = $request->query('year') ?? now()->format('Y');
             $join->on('investment_appreciations.investment_id', '=', 'investments.id')
-                 ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
+                 ->where('investment_appreciations.date_appreciation', '=', DB::raw("(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id and year(date_appreciation) = $year)"));
         })
         ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
         ->groupBy('currencies.code')
@@ -280,21 +281,23 @@ class HeritageController extends Controller
                 ->first();
                 
                 $investments = Investment::select('currencies.code', DB::raw('SUM(investment_appreciations.amount) as total_end_amount'))
-                ->leftJoin('investment_appreciations', function($join) {
+                ->leftJoin('investment_appreciations', function($join) use ($value) {
+                    $year = $value->year ?? now()->format('Y');
                     $join->on('investment_appreciations.investment_id', '=', 'investments.id')
-                         ->where('investment_appreciations.date_appreciation', '=', DB::raw('(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id)'));
+                         ->where('investment_appreciations.date_appreciation', '=', DB::raw("(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id and year(date_appreciation) = $year)"));
                 })
                 ->where([
                     ['badge_id', $balance->badge_id],
                 ])
+                ->whereYear('date_appreciation', '<=', $value->year)
                 ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
                 ->groupBy('currencies.code')
                 ->get();
 
                 $balance->comercial_amount = $comercial_amount->comercial_amount;
-                $balance->investments = (float)$investments[0]->total_end_amount;
+                $balance->investments = count($investments) > 0 ? (float)$investments[0]->total_end_amount : 0;
 
-                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $investments[0]->total_end_amount, 2);
+                $balance->amount = round($comercial_amount->comercial_amount + $balance->movements + $init_amout->amount + $balance->investments, 2);
             }
         }
 
