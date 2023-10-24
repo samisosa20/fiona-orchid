@@ -126,6 +126,8 @@ class ReportController extends Controller
                     ['badge_id', $currency]
                 ]);
             })
+            ->selectRaw('category_id, sum(amount) as amount')
+            ->groupBy('category_id')
             ->get();
 
             return $movements;
