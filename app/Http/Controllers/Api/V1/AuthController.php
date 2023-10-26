@@ -190,4 +190,9 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Se cerro la sesion exitosamente']);
     }
+    
+    public function currencies(Request $request)
+    {
+        return response()->json(Currency::select('id', 'code', 'name')->get());
+    }
 }
