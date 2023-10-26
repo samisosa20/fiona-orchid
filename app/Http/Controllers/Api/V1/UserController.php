@@ -147,30 +147,26 @@ class UserController extends Controller
     public function update(Request $request)
     {
         try{
-            $user = auth()->user();
 
-            User::find($user->id)
-            ->update([
-                'name' => $request->input('name'),
-            ]);
+            $user = User::find(auth()->user()->id);
+
+            $user->name = $request->input('name');
+
             
-            if($request->input('password')) {
-                User::find($user->id)
-                ->update([
-                    'password' => Hash::make($request->input('password'))
-                ]);
+            if($request->password) {
+                $user->password = Hash::make($request->password);
             }
-            if($request->input('badge_id')) {
-                User::find($user->id)
-                ->update([
-                    'badge_id' => $request->input('badge_id')
-                ]);
+            if($request->badge_id) {
+                $user->badge_id = $request->badge_id;
             }
+            $user->save();
+
             return response()->json([
                 'message' => 'Datos guardados',
                 'data' => [
-                    'name' => $request->input('name'),
-                    'email' => $request->input('email'),
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'badge_id' => $user->badge_id,
                 ]
             ]);
         } catch(\Illuminate\Database\QueryException $ex){

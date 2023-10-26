@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Auth\Events\Registered;
 use App\Notifications\PasswordResetNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -88,6 +87,9 @@ class AuthController extends Controller
                 'password' => [
                     'required'
                 ],
+                'badge_id' => [
+                    'required'
+                ],
             ]);
 
             if($validator->fails()){
@@ -97,12 +99,13 @@ class AuthController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $user = new User([
+            $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make($request->input('password'))
+                'password' => Hash::make($request->input('password')),
+                'badge_id' => $request->badge_id,
+                'permissions' => ['platform.index' => "1"]
             ]);
-            $user->save();
 
             Category::create([
                 'name' => 'Transferencia',
@@ -111,19 +114,24 @@ class AuthController extends Controller
             ]);
 
             $token = JWTAuth::fromUser($user);
-            event(new Registered($user));
 
             return response()->json([
                 'message' => 'Usuario registrado exitosamente',
                 'data' => [
                     'name' => $user->name,
-                    'email' => $user->email
+                    'email' => $user->email,
+                    'transfer_id' => $user->transferId->id,
+                    'currency' => $user->badge_id,
                 ],
-                'token' => $token
+                'token' => $token,
+                'currencies' => Currency::get(),
+                'accounts_type' => TypeAccount::get(),
+                'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
+                'periods' => CommonTypesController::listPeriodicity(),
             ], 201);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
-                'message' =>  $ex->errorInfo[0] === "23000" ? 'Usuario registrado' : 'Datos no guardados',
+                'message' =>  $ex->errorInfo[0] === "23000" ? 'El Usuario ya esta registrado' : 'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
             ], 400);
         }
