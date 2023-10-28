@@ -23,8 +23,8 @@ class UserController extends Controller
     {
         $user = auth()->user();
 
-        $data = User::find($user->id)
-        ->first();
+        
+        $data = User::find($user->id);
 
         if($data) {
             return response()->json($data);
