@@ -387,6 +387,7 @@ class BudgetController extends Controller
             ['category_id', $category_transfer->id],
             ['badge_id', $request->badge_id],
             ['amount', '>', 0],
+            ['trm', '<>', 1],
         ])
             ->whereYear('date_purchase', $request->year)
             ->join('accounts', 'accounts.id', 'account_id')
@@ -404,6 +405,7 @@ class BudgetController extends Controller
             ['category_id', $category_transfer->id],
             ['badge_id', $request->badge_id],
             ['amount', '<', 0],
+            ['trm', '<>', 1],
         ])
             ->whereYear('date_purchase', $request->year)
             ->join('accounts', 'accounts.id', 'account_id')
