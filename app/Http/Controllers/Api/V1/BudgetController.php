@@ -395,6 +395,7 @@ class BudgetController extends Controller
 
         $category_transfer->movements = array($movements_incomes);
         $category_transfer->budgets = array();
+        $category_transfer->sub_categories = array();
         $category_transfer->group_id = 2;
         $categories->push($category_transfer);
 
@@ -411,6 +412,7 @@ class BudgetController extends Controller
 
         $category_transfer_expensive->movements = array($movements_expensives);
         $category_transfer_expensive->budgets = array();
+        $category_transfer_expensive->sub_categories = array();
         $category_transfer_expensive->group_id = 3;
         $categories->push($category_transfer_expensive);
 
