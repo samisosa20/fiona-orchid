@@ -24,8 +24,12 @@ class BudgetController extends Controller
         $budgets = Budget::where([
             ['user_id', $user->id]
         ])
+        ->with(['period', 'category', 'currency'])
             ->when($request->query('year'), function ($query) use ($request) {
                 $query->where('year', $request->query('year'));
+            })
+            ->when($request->query('badge_id'), function ($query) use ($request) {
+                $query->where('badge_id', $request->query('badge_id'));
             })
             ->get();
 
