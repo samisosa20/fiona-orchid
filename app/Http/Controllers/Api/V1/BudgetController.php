@@ -263,15 +263,15 @@ class BudgetController extends Controller
                     })
                     ->get();
 
-                    $totalAmount = $expensives->sum(function ($expensive) {
-                        if ($expensive->period_id == 1) {
-                            return $expensive->amount * 12;
-                        } else {
-                            return $expensive->amount;
-                        }
-                    });
+                $totalAmount = $expensives->sum(function ($expensive) {
+                    if ($expensive->period_id == 1) {
+                        return $expensive->amount * 12;
+                    } else {
+                        return $expensive->amount;
+                    }
+                });
 
-                    $year->expensives = (float)$totalAmount;
+                $year->expensives = (float)$totalAmount;
             }
         }
 
@@ -308,7 +308,7 @@ class BudgetController extends Controller
                     ['year', $request->year],
                     ['badge_id', $request->badge_id],
                 ])
-                    ->with(['period'])
+                    ->with(['period', 'category'])
                     ->first();
 
                 if ($budgets) {
@@ -350,7 +350,7 @@ class BudgetController extends Controller
                 ['year', $request->year],
                 ['badge_id', $request->badge_id],
             ])
-                ->with(['period'])
+                ->with(['period', 'category'])
                 ->first();
             if ($budgets) {
                 if ($budgets->period->id === 1) {
@@ -366,6 +366,54 @@ class BudgetController extends Controller
             $category->budgets = $budgets_main;
         }
 
+        $category_transfer = Category::where([
+            ['user_id', auth()->user()->id],
+            ['group_id', '=', env('GROUP_TRANSFER_ID')]
+        ])
+            ->whereNull('category_id')
+            ->first();
+
+        $category_transfer_expensive = Category::where([
+            ['user_id', auth()->user()->id],
+            ['group_id', '=', env('GROUP_TRANSFER_ID')]
+        ])
+            ->whereNull('category_id')
+            ->first();
+
+
+
+        $movements_incomes = (float)Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['category_id', $category_transfer->id],
+            ['badge_id', $request->badge_id],
+            ['amount', '>', 0],
+        ])
+            ->whereYear('date_purchase', $request->year)
+            ->join('accounts', 'accounts.id', 'account_id')
+            ->join('currencies', 'currencies.id', 'badge_id')
+            ->sum('amount');
+
+        $category_transfer->movements = array($movements_incomes);
+        $category_transfer->budgets = array();
+        $category_transfer->group_id = 2;
+        $categories->push($category_transfer);
+
+        $movements_expensives = (float)Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['category_id', $category_transfer->id],
+            ['badge_id', $request->badge_id],
+            ['amount', '<', 0],
+        ])
+            ->whereYear('date_purchase', $request->year)
+            ->join('accounts', 'accounts.id', 'account_id')
+            ->join('currencies', 'currencies.id', 'badge_id')
+            ->sum('amount');
+
+        $category_transfer_expensive->movements = array($movements_expensives);
+        $category_transfer_expensive->budgets = array();
+        $category_transfer_expensive->group_id = 3;
+        $categories->push($category_transfer_expensive);
+
         $sumsMove = 0;
         $sumsBudget = 0;
 
@@ -377,7 +425,7 @@ class BudgetController extends Controller
                 if ($budget) {
                     $value = $budget->category->group_id > 2 ? $budget->amount * -1 : $budget->amount;
 
-                    $sumsBudget += $value;
+                        $sumsBudget += $value;
                 }
             }
         }
