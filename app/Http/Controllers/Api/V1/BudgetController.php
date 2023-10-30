@@ -104,7 +104,7 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
-        return response()->json($budget->with(['period', 'category', 'currency']));
+        return response()->json($budget);
     }
 
     /**
