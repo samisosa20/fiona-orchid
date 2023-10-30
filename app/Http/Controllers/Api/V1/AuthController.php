@@ -63,7 +63,7 @@ class AuthController extends Controller
                 'currencies' => Currency::get(),
                 'accounts_type' => TypeAccount::get(),
                 'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
-                'periods' => Period::get(),
+                'periods' => Period::select('id as value', 'name as label')->get(),
             ]);
 
         } catch(\Illuminate\Database\QueryException $ex){
