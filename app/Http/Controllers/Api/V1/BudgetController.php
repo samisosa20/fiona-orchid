@@ -102,9 +102,15 @@ class BudgetController extends Controller
      * @param  \App\Models\Budget  $budget
      * @return \Illuminate\Http\Response
      */
-    public function show(Budget $budget)
+    public function show(int $id)
     {
-        return response()->json($budget->with(['period', 'category', 'currency'])->first());
+        $budget = Budget::where([
+            ['user_id', auth()->user()->id],
+            ['id', $id],
+        ])
+        ->with(['period', 'category', 'currency'])
+        ->first();
+        return response()->json($budget);
     }
 
     /**
