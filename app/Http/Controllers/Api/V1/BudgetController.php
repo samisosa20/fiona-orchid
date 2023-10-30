@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
- 
+
 use App\Models\Budget;
 use App\Models\Movement;
 use App\Models\Category;
+use App\Models\Currency;
 
 class BudgetController extends Controller
 {
@@ -23,10 +24,10 @@ class BudgetController extends Controller
         $budgets = Budget::where([
             ['user_id', $user->id]
         ])
-        ->when($request->query('year'), function ($query) use ($request) {
-            $query->where('year', $request->query('year'));
-        })
-        ->get();
+            ->when($request->query('year'), function ($query) use ($request) {
+                $query->where('year', $request->query('year'));
+            })
+            ->get();
 
         return response()->json($budgets);
     }
@@ -49,7 +50,7 @@ class BudgetController extends Controller
      */
     public function store(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'category_id' => [
                     'required',
@@ -68,7 +69,7 @@ class BudgetController extends Controller
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -83,7 +84,7 @@ class BudgetController extends Controller
                 'message' => 'Presupuesto creado exitosamente',
                 'data' => $budget,
             ]);
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -122,7 +123,7 @@ class BudgetController extends Controller
      */
     public function update(Request $request, Budget $budget)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'category_id' => [
                     'required',
@@ -141,7 +142,7 @@ class BudgetController extends Controller
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -154,7 +155,7 @@ class BudgetController extends Controller
                 'message' => 'Presupuesto editado exitosamente',
                 'data' => $budget,
             ]);
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -176,7 +177,7 @@ class BudgetController extends Controller
                 'message' => 'Presupuesto eliminado exitosamente',
                 'data' => $budget,
             ]);
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -191,36 +192,79 @@ class BudgetController extends Controller
      */
     public function listYear()
     {
-        $budgets =  Budget::where([
-            ['user_id', auth()->user()->id]
-        ])
-        ->selectRaw('year, GROUP_CONCAT(distinct(currencies.code) SEPARATOR ", ") as currency')
-        ->join('currencies', 'currencies.id', 'budgets.badge_id')
-        ->groupBy('year')
-        ->get();
+        $currencies = Budget::select('currencies.code as currency')
+            ->distinct()
+            ->where([
+                ['user_id', auth()->user()->id],
+            ])
+            ->join('currencies', 'budgets.badge_id', '=', 'currencies.id')
+            ->get();
 
-        return response()->json($budgets);
+        foreach ($currencies as &$currency) {
+            $currency->years = Budget::where([
+                ['user_id', auth()->user()->id],
+                ['currencies.code', $currency->currency],
+            ])
+                ->select('year')
+                ->distinct()
+                ->join('currencies', 'budgets.badge_id', '=', 'currencies.id')
+                ->get();
+            foreach ($currency->years as &$year) {
+                $year->incomes = (float)Budget::where([
+                    ['user_id', auth()->user()->id],
+                    ['year', $year->year],
+                ])
+                    ->whereHas('currency', function ($query) use ($currency) {
+                        $query->where([
+                            ['code', $currency->currency],
+                        ]);
+                    })
+                    ->whereHas('category', function ($query) use ($currency) {
+                        $query->where([
+                            ['group_id', 2],
+                        ]);
+                    })
+                    ->sum('amount');
+                $year->expensives = (float)Budget::where([
+                    ['user_id', auth()->user()->id],
+                    ['year', $year->year],
+                ])
+                    ->whereHas('currency', function ($query) use ($currency) {
+                        $query->where([
+                            ['code', $currency->currency],
+                        ]);
+                    })
+                    ->whereHas('category', function ($query) use ($currency) {
+                        $query->where([
+                            ['group_id', '<>', 2],
+                        ]);
+                    })
+                    ->sum('amount');
+            }
+        }
+
+        return response()->json($currencies);
     }
-    
+
     /**
      * Display budget report
      *
      * @return \Illuminate\Http\Response
      */
-    public function reportBudget()
+    public function reportBudget(Request $request)
     {
         $categories = Category::where([
             ['user_id', auth()->user()->id],
             ['group_id', '<>', env('GROUP_TRANSFER_ID')]
         ])
-        ->whereNull('category_id')
-        ->get();
+            ->whereNull('category_id')
+            ->get();
 
         foreach ($categories as &$category) {
             $sub_categories = Category::where([
                 ['user_id', auth()->user()->id],
                 ['category_id', $category->id]
-                ])
+            ])
                 ->get();
             $movements_main = [];
             $budgets_main = [];
@@ -229,54 +273,56 @@ class BudgetController extends Controller
                 $budgets = Budget::where([
                     ['user_id', auth()->user()->id],
                     ['category_id', $sub_category->id],
-                    ['year', now()->format('Y')],
-                    ])
-                    ->get();
-                    
-                foreach ($budgets as &$budget) {
-                    if($budget->period->name === 'Monthly') {
-                        $budget->amount = $budget->amount * 12;
+                    ['year', $request->year],
+                    ['badge_id', $request->badge_id],
+                ])
+                    ->with(['period'])
+                    ->first();
+
+                if ($budgets) {
+
+                    if ($budgets->period->name === 'Monthly') {
+                        $budgets->amount = $budgets->amount * 12;
                     }
                 }
                 $sub_category->budget = $budgets;
                 array_push($budgets_main, $budgets);
 
-                $movements = Movement::where([
+                $movements = (float)Movement::where([
                     ['movements.user_id', auth()->user()->id],
                     ['category_id', $sub_category->id],
+                    ['badge_id', $request->badge_id],
                 ])
-                ->whereYear('date_purchase', now()->format('Y'))
-                ->selectRaw('code, sum(amount) as amount')
-                ->join('accounts', 'accounts.id', 'account_id')
-                ->join('currencies', 'currencies.id', 'badge_id')
-                ->groupBy('code')
-                ->get();
+                    ->whereYear('date_purchase', $request->year)
+                    ->join('accounts', 'accounts.id', 'account_id')
+                    ->join('currencies', 'currencies.id', 'badge_id')
+                    ->sum('amount');
 
                 $sub_category->movements = $movements;
                 array_push($movements_main, $movements);
             }
 
-            $movements = Movement::where([
-                    ['movements.user_id', auth()->user()->id],
-                    ['category_id', $category->id],
-                ])
-                ->whereYear('date_purchase', now()->format('Y'))
-                ->selectRaw('code, sum(amount) as amount')
+            $movements = (float)Movement::where([
+                ['movements.user_id', auth()->user()->id],
+                ['category_id', $category->id],
+                ['badge_id', $request->badge_id],
+            ])
+                ->whereYear('date_purchase', $request->year)
                 ->join('accounts', 'accounts.id', 'account_id')
                 ->join('currencies', 'currencies.id', 'badge_id')
-                ->groupBy('code')
-                ->get();
+                ->sum('amount');
 
             $budgets = Budget::where([
                 ['user_id', auth()->user()->id],
                 ['category_id', $category->id],
-                ['year', now()->format('Y')],
-                ])
-                ->get();
-                
-            foreach ($budgets as &$budget) {
-                if($budget->period->name === 'Monthly') {
-                    $budget->amount = $budget->amount * 12;
+                ['year', $request->year],
+                ['badge_id', $request->badge_id],
+            ])
+                ->with(['period'])
+                ->first();
+            if ($budgets) {
+                if ($budgets->period->name === 'Monthly') {
+                    $budgets->amount = $budgets->amount * 12;
                 }
             }
 
@@ -288,24 +334,18 @@ class BudgetController extends Controller
             $category->budgets = $budgets_main;
         }
 
-        $sumsMove = [];
-        $sumsBudget = [];
-        
-        foreach ($categories as $category) {
-            foreach ($category['movements'] as $subArray) {
-                foreach ($subArray as $item) {
-                    $code = $item['code'];
-                    $value = $item['amount'];
-            
-                    $sumsMove[$code] = isset($sumsMove[$code]) ? $sumsMove[$code] + $value : $value;
-                }
-            }
-            foreach ($category['budgets'] as $subArray) {
-                foreach ($subArray as $item) {
-                    $code = $item->currency->code;
-                    $value = $item->category->group_id > 2 ? $item->amount * -1 : $item->amount;
+        $sumsMove = 0;
+        $sumsBudget = 0;
 
-                    $sumsBudget[$code] = isset($sumsBudget[$code]) ? $sumsBudget[$code] + $value : $value;
+        foreach ($categories as $category) {
+            foreach ($category['movements'] as $movement) {
+                $sumsMove += (float)$movement;
+            }
+            foreach ($category['budgets'] as $budget) {
+                if($budget) {
+                    $value = $budget->category->group_id > 2 ? $budget->amount * -1 : $budget->amount;
+    
+                    $sumsBudget += $value;
                 }
             }
         }
@@ -313,9 +353,8 @@ class BudgetController extends Controller
         return response()->json([
             'incomes' => array_values(array_filter($categories->toArray(), fn ($v) => $v['group_id'] == 2)),
             'expensives' => array_values(array_filter($categories->toArray(), fn ($v) => $v['group_id'] > 2)),
-            'totalMovements' => $sumsMove,
-            'totalBudgets' => $sumsBudget,
+            'totalMovements' => round($sumsMove, 2),
+            'totalBudgets' => round($sumsBudget, 2),
         ]);
     }
-
 }
