@@ -24,7 +24,7 @@ class BudgetController extends Controller
         $budgets = Budget::where([
             ['user_id', $user->id]
         ])
-        ->with(['period', 'category', 'currency'])
+            ->with(['period', 'category', 'currency'])
             ->when($request->query('year'), function ($query) use ($request) {
                 $query->where('year', $request->query('year'));
             })
@@ -108,8 +108,8 @@ class BudgetController extends Controller
             ['user_id', auth()->user()->id],
             ['id', $id],
         ])
-        ->with(['period', 'category', 'currency'])
-        ->first();
+            ->with(['period', 'category', 'currency'])
+            ->first();
         return response()->json($budget);
     }
 
@@ -220,7 +220,7 @@ class BudgetController extends Controller
                 ->join('currencies', 'budgets.badge_id', '=', 'currencies.id')
                 ->get();
             foreach ($currency->years as &$year) {
-                $year->incomes = (float)Budget::where([
+                $incomes = Budget::where([
                     ['user_id', auth()->user()->id],
                     ['year', $year->year],
                 ])
@@ -234,8 +234,20 @@ class BudgetController extends Controller
                             ['group_id', 2],
                         ]);
                     })
-                    ->sum('amount');
-                $year->expensives = (float)Budget::where([
+                    ->get();
+
+                $totalAmount = $incomes->sum(function ($income) {
+                    if ($income->period_id == 1) {
+                        return $income->amount * 12;
+                    } else {
+                        return $income->amount;
+                    }
+                });
+
+
+
+                $year->incomes = (float)$totalAmount;
+                $expensives = Budget::where([
                     ['user_id', auth()->user()->id],
                     ['year', $year->year],
                 ])
@@ -249,7 +261,17 @@ class BudgetController extends Controller
                             ['group_id', '<>', 2],
                         ]);
                     })
-                    ->sum('amount');
+                    ->get();
+
+                    $totalAmount = $expensives->sum(function ($expensive) {
+                        if ($expensive->period_id == 1) {
+                            return $expensive->amount * 12;
+                        } else {
+                            return $expensive->amount;
+                        }
+                    });
+
+                    $year->expensives = (float)$totalAmount;
             }
         }
 
@@ -352,9 +374,9 @@ class BudgetController extends Controller
                 $sumsMove += (float)$movement;
             }
             foreach ($category['budgets'] as $budget) {
-                if($budget) {
+                if ($budget) {
                     $value = $budget->category->group_id > 2 ? $budget->amount * -1 : $budget->amount;
-    
+
                     $sumsBudget += $value;
                 }
             }
