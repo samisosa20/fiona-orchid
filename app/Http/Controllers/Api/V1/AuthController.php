@@ -15,6 +15,7 @@ use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Group;
 use App\Models\TypeAccount;
+use App\Models\Period;
 
 use App\Controllers\Types\CommonTypesController;
 
@@ -62,7 +63,7 @@ class AuthController extends Controller
                 'currencies' => Currency::get(),
                 'accounts_type' => TypeAccount::get(),
                 'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
-                'periods' => CommonTypesController::listPeriodicity(),
+                'periods' => Period::get(),
             ]);
 
         } catch(\Illuminate\Database\QueryException $ex){

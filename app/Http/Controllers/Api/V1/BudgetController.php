@@ -104,7 +104,7 @@ class BudgetController extends Controller
      */
     public function show(Budget $budget)
     {
-        return response()->json($budget);
+        return response()->json($budget->with(['period', 'category', 'currency'])->first());
     }
 
     /**
@@ -285,7 +285,7 @@ class BudgetController extends Controller
 
                 if ($budgets) {
 
-                    if ($budgets->period->name === 'Monthly') {
+                    if ($budgets->period->id === 1) {
                         $budgets->amount = $budgets->amount * 12;
                     }
                 }
@@ -325,7 +325,7 @@ class BudgetController extends Controller
                 ->with(['period'])
                 ->first();
             if ($budgets) {
-                if ($budgets->period->name === 'Monthly') {
+                if ($budgets->period->id === 1) {
                     $budgets->amount = $budgets->amount * 12;
                 }
             }
