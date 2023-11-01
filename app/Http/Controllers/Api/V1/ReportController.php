@@ -44,7 +44,7 @@ class ReportController extends Controller
                 'init_date' => $init_date,
                 'end_date' => $end_date,
                 'currency' => Currency::find($currency),
-                'movements' => [],
+                'budget' => $data['budget'],
             ];
         } catch (\Illuminate\Database\QueryException $ex) {
             return response([
