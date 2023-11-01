@@ -216,6 +216,8 @@ class ReportController extends Controller
                 ['user_id', $user->id],
                 ['badge_id', $currency],
                 ['period_id', 1],
+                ['year', '>=', $init->year],
+                ['year', '<=', $end->year],
             ])
                 ->with(['category'])
                 ->addSelect([
@@ -226,9 +228,15 @@ class ReportController extends Controller
                         ->whereColumn('movements.user_id', 'budgets.user_id')
                         ->whereColumn('accounts.badge_id', 'budgets.badge_id')
                         ->whereDate('date_purchase', '>=', $init_date)
-                ->whereDate('date_purchase', '<=', $end_date),
+                        ->whereDate('date_purchase', '<=', $end_date),
                 ])
                 ->get();
+
+            $diffMonth = $end->diffInMonths($init) + 1;
+            
+            foreach ($budgets_monthly as &$budget) {
+                $budget->amount = $budget->amount * $diffMonth;
+            }
 
             return [
                 'open_close' => $close_open,
