@@ -236,6 +236,7 @@ class ReportController extends Controller
             
             foreach ($budgets_monthly as &$budget) {
                 $budget->amount = $budget->amount * $diffMonth;
+                $budget->movement = (float)$budget->movement;
             }
 
             return [
