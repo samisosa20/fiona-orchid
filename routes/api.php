@@ -59,5 +59,7 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/report', [ReportController::class, 'report']);
     Route::get('/report/category', [ReportController::class, 'movementsByCategory']);
     Route::get('/report/group', [ReportController::class, 'movementsByGroup']);
+    Route::get('/analytics/category', [ReportController::class, 'reportCategory']);
+    Route::get('/analytics/project', [ReportController::class, 'testViabilityProject']);
     Route::apiResource('/profile', UserController::class);
 });

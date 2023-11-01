@@ -7,15 +7,21 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 use App\Controllers\Reports\ReportController as Report;
+use App\Controllers\Reports\HelpersController;
 
 use App\Models\Currency;
 use App\Models\Movement;
+use App\Models\Category;
+
 class ReportController extends Controller
 {
     public function report(Request $request)
     {
-        try{
+        try {
             $data = Report::report($request);
             $init_date = $request->query('start_date') ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
             $end_date = $request->query('end_date') ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
@@ -40,24 +46,24 @@ class ReportController extends Controller
                 'currency' => Currency::find($currency),
                 'movements' => [],
             ];
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' => 'Datos no obtenidos',
-                'detail' => $ex//->errorInfo[0]
+                'detail' => $ex //->errorInfo[0]
             ], 400);
         }
     }
 
-    public function movementsByCategory (Request $request)
+    public function movementsByCategory(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'category_id' => [
                     'required',
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -71,35 +77,35 @@ class ReportController extends Controller
                 ['movements.user_id', auth()->user()->id],
                 ['category_id', $request->all()['category_id']],
             ])
-            ->with(['account', 'event'])
-            ->whereDate('date_purchase', '>=', $init_date)
-            ->whereDate('date_purchase', '<=', $end_date)
-            ->whereHas('account', function ($query) use($currency){
-                $query->where([
-                    ['badge_id', $currency]
-                ]);
-            })
-            ->get();
+                ->with(['account', 'event'])
+                ->whereDate('date_purchase', '>=', $init_date)
+                ->whereDate('date_purchase', '<=', $end_date)
+                ->whereHas('account', function ($query) use ($currency) {
+                    $query->where([
+                        ['badge_id', $currency]
+                    ]);
+                })
+                ->get();
 
             return $movements;
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' => 'Datos no obtenidos',
-                'detail' => $ex//->errorInfo[0]
+                'detail' => $ex->errorInfo[0]
             ], 400);
         }
     }
-    
-    public function movementsByGroup (Request $request)
+
+    public function movementsByGroup(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'group_id' => [
                     'required',
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -113,32 +119,138 @@ class ReportController extends Controller
             $movements = Movement::where([
                 ['movements.user_id', auth()->user()->id],
             ])
-            ->with(['account', 'event'])
-            ->with('category', function ($query) {
-                $query->with('categoryFather');
-            })
-            ->whereDate('date_purchase', '>=', $init_date)
-            ->whereDate('date_purchase', '<=', $end_date)
-            ->whereHas('category', function ($query) use($request){
-                $query->where([
-                    ['group_id', $request->all()['group_id']]
-                ]);
-            })
-            ->whereHas('account', function ($query) use($currency){
-                $query->where([
-                    ['badge_id', $currency]
-                ]);
-            })
-            ->selectRaw('category_id, sum(amount) as amount')
-            ->groupBy('category_id')
-            ->orderByRaw('sum(amount) ASC')
-            ->get();
+                ->with(['account', 'event'])
+                ->with('category', function ($query) {
+                    $query->with('categoryFather');
+                })
+                ->whereDate('date_purchase', '>=', $init_date)
+                ->whereDate('date_purchase', '<=', $end_date)
+                ->whereHas('category', function ($query) use ($request) {
+                    $query->where([
+                        ['group_id', $request->all()['group_id']]
+                    ]);
+                })
+                ->whereHas('account', function ($query) use ($currency) {
+                    $query->where([
+                        ['badge_id', $currency]
+                    ]);
+                })
+                ->selectRaw('category_id, sum(amount) as amount')
+                ->groupBy('category_id')
+                ->orderByRaw('sum(amount) ASC')
+                ->get();
 
             return $movements;
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' => 'Datos no obtenidos',
-                'detail' => $ex//->errorInfo[0]
+                'detail' => $ex->errorInfo[0]
+            ], 400);
+        }
+    }
+
+    public function reportCategory(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'category_id' => [
+                    'required',
+                ],
+            ]);
+
+            if ($validator->fails()) {
+                return response([
+                    'message' => 'data missing',
+                    'detail' => $validator->errors()
+                ], 400)->header('Content-Type', 'json');
+            }
+
+            $init_date = $request->start_date ?? Carbon::now()->startOfYear();
+            $end_date = $request->end_date ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
+
+            $category = Category::where([
+                ['id', $request->category_id]
+            ])
+                ->with(['subCategories'])
+                ->first();
+
+            $total = array();
+
+            foreach ($category->subCategories as &$subCategory) {
+                $subCategory->amount = Movement::where([
+                    ['movements.user_id', auth()->user()->id],
+                    ['category_id', $subCategory->id],
+                ])
+                    ->selectRaw('currencies.code, sum(amount) as amount')
+                    ->whereDate('date_purchase', '>=', $init_date)
+                    ->whereDate('date_purchase', '<=', $end_date)
+                    ->join('accounts', 'accounts.id', '=', 'account_id')
+                    ->join('currencies', 'currencies.id', '=', 'badge_id')
+                    ->groupBy('currencies.code')
+                    ->get();
+                array_push($total, $subCategory->amount);
+            }
+
+            $category->total_amount = $category->subCategories->reduce(function ($carry, $item) {
+                foreach ($item['amount'] as $amount) {
+                    if (!isset($carry[$amount['code']])) {
+                        $carry[$amount['code']] = 0;
+                    }
+                    $carry[$amount['code']] += $amount['amount'];
+                }
+                return $carry;
+            }, []);
+
+            return response()->json($category);
+        } catch (\Illuminate\Database\QueryException $ex) {
+            return response([
+                'message' => 'Datos no obtenidos',
+                'detail' => $ex //->errorInfo[0]
+            ], 400);
+        }
+    }
+
+    public function testViabilityProject(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'rate' => [
+                    'required',
+                ],
+                'periods' => [
+                    'required',
+                ],
+                'investment' => [
+                    'required',
+                ],
+                'cash_flow' => [
+                    'required',
+                ],
+            ]);
+
+            if ($validator->fails()) {
+                return response([
+                    'message' => 'data missing',
+                    'detail' => $validator->errors()
+                ], 400)->header('Content-Type', 'json');
+            }
+
+            $tasaTIR = HelpersController::calcTir($request->investment, $request->cash_flow, $request->periods, $request->end_investement);
+            $npv = HelpersController::calcNpv($request->investment, $request->cash_flow, $request->periods, $request->end_investement, $request->rate);
+            $costBene = HelpersController::calcCostBene($request->investment, $request->cash_flow, $request->periods, $request->end_investement, $request->rate);
+
+            return response()->json([
+                'tir' => $tasaTIR . "%",
+                'approve_tir' => $tasaTIR >= $request->rate,
+                'npv' => $npv,
+                'approve_npv' => $npv > 0,
+                'benefist_cost' => $costBene,
+                'approve_benefist_cost' => $costBene > 1,
+            ]);
+        } catch (\Illuminate\Database\QueryException $ex) {
+            return response([
+                'message' => 'Datos no obtenidos',
+                'detail' => $ex //->errorInfo[0]
             ], 400);
         }
     }

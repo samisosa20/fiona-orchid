@@ -303,20 +303,16 @@ class BudgetController extends Controller
 
             foreach ($sub_categories as &$sub_category) {
                 $budgets = Budget::where([
-                    ['user_id', auth()->user()->id],
-                    ['category_id', $sub_category->id],
+                    ['budgets.user_id', auth()->user()->id],
+                    ['budgets.category_id', $sub_category->id],
                     ['year', $request->year],
                     ['badge_id', $request->badge_id],
                 ])
-                    ->with(['period', 'category'])
+                    ->selectRaw('year, group_id, sum(if(period_id = 1, amount * 12, amount)) as amount')
+                    ->join('categories', 'categories.id', '=', 'budgets.category_id')
+                    ->groupBy('year', 'group_id')
                     ->first();
 
-                if ($budgets) {
-
-                    if ($budgets->period->id === 1) {
-                        $budgets->amount = $budgets->amount * 12;
-                    }
-                }
                 $sub_category->budget = $budgets;
                 array_push($budgets_main, $budgets);
 
@@ -345,18 +341,15 @@ class BudgetController extends Controller
                 ->sum('amount');
 
             $budgets = Budget::where([
-                ['user_id', auth()->user()->id],
-                ['category_id', $category->id],
+                ['budgets.user_id', auth()->user()->id],
+                ['budgets.category_id', $category->id],
                 ['year', $request->year],
                 ['badge_id', $request->badge_id],
             ])
-                ->with(['period', 'category'])
+                ->selectRaw('year, group_id, sum(if(period_id = 1, amount * 12, amount)) as amount')
+                ->join('categories', 'categories.id', '=', 'budgets.category_id')
+                ->groupBy('year', 'group_id')
                 ->first();
-            if ($budgets) {
-                if ($budgets->period->id === 1) {
-                    $budgets->amount = $budgets->amount * 12;
-                }
-            }
 
             array_push($budgets_main, $budgets);
             array_push($movements_main, $movements);
@@ -427,9 +420,9 @@ class BudgetController extends Controller
             }
             foreach ($category['budgets'] as $budget) {
                 if ($budget) {
-                    $value = $budget->category->group_id > 2 ? $budget->amount * -1 : $budget->amount;
+                    $value = $budget->group_id > 2 ? $budget->amount * -1 : $budget->amount;
 
-                        $sumsBudget += $value;
+                    $sumsBudget += $value;
                 }
             }
         }
