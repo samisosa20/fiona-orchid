@@ -220,11 +220,13 @@ class ReportController extends Controller
                 ->with(['category'])
                 ->addSelect([
                     'movement' => \DB::table('movements')
-                        ->selectRaw('sum(amount)')
+                        ->selectRaw('ifnull(sum(amount), 0)')
                         ->join('accounts', 'accounts.id', 'movements.account_id')
                         ->whereColumn('movements.category_id', 'budgets.category_id')
                         ->whereColumn('movements.user_id', 'budgets.user_id')
                         ->whereColumn('accounts.badge_id', 'budgets.badge_id')
+                        ->whereDate('date_purchase', '>=', $init_date)
+                ->whereDate('date_purchase', '<=', $end_date),
                 ])
                 ->get();
 
