@@ -209,6 +209,36 @@ class ReportController extends Controller
             ], 400);
         }
     }
+    
+    public function canido(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'amount' => [
+                    'required',
+                ],
+                'badge_id' => [
+                    'required',
+                ],
+            ]);
+
+            if ($validator->fails()) {
+                return response([
+                    'message' => 'data missing',
+                    'detail' => $validator->errors()
+                ], 400)->header('Content-Type', 'json');
+            }
+
+            $result = HelpersController::canExpensive($request->amount, $request->badge_id);
+
+            return response()->json($result);
+        } catch (\Illuminate\Database\QueryException $ex) {
+            return response([
+                'message' => 'Datos no obtenidos',
+                'detail' => $ex //->errorInfo[0]
+            ], 400);
+        }
+    }
 
     public function testViabilityProject(Request $request)
     {
@@ -223,7 +253,10 @@ class ReportController extends Controller
                 'investment' => [
                     'required',
                 ],
-                'cash_flow' => [
+                'incomes_flow' => [
+                    'required',
+                ],
+                'expensives_flow' => [
                     'required',
                 ],
             ]);
@@ -235,18 +268,25 @@ class ReportController extends Controller
                 ], 400)->header('Content-Type', 'json');
             }
 
-            $tasaTIR = HelpersController::calcTir($request->investment, $request->cash_flow, $request->periods, $request->end_investement);
-            $npv = HelpersController::calcNpv($request->investment, $request->cash_flow, $request->periods, $request->end_investement, $request->rate);
-            $costBene = HelpersController::calcCostBene($request->investment, $request->cash_flow, $request->periods, $request->end_investement, $request->rate);
+            $tasaTIR = HelpersController::calcTir($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement);
+            $roi = HelpersController::calcROI($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement);
+            $npv = HelpersController::calcNpv($request->investment, $request->incomes_flow, $request->periods, $request->end_investement, $request->rate);
+            $costBene = HelpersController::calcCostBene($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement, $request->rate);
 
-            return response()->json([
+            $result = [
                 'tir' => $tasaTIR . "%",
                 'approve_tir' => $tasaTIR >= $request->rate,
                 'npv' => $npv,
                 'approve_npv' => $npv > 0,
                 'benefist_cost' => $costBene,
                 'approve_benefist_cost' => $costBene > 1,
-            ]);
+                'roi' => $roi,
+                'approve_roi' => $roi > 100,
+            ];
+
+            $message = HelpersController::translateResult($result);
+
+            return response()->json(array_merge($result, ['message' => $message]));
         } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' => 'Datos no obtenidos',
@@ -254,4 +294,5 @@ class ReportController extends Controller
             ], 400);
         }
     }
+
 }
