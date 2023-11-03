@@ -270,8 +270,8 @@ class ReportController extends Controller
 
             $tasaTIR = HelpersController::calcTir($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement);
             $roi = HelpersController::calcROI($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement);
-            $npv = HelpersController::calcNpv($request->investment, $request->incomes_flow, $request->periods, $request->end_investement, $request->rate);
-            $costBene = HelpersController::calcCostBene($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->end_investement, $request->rate);
+            $npv = HelpersController::calcNpv($request->investment, $request->incomes_flow, $request->periods, $request->rate, $request->end_investement);
+            $costBene = HelpersController::calcCostBene($request->investment, $request->incomes_flow, $request->expensives_flow, $request->periods, $request->rate, $request->end_investement);
 
             $result = [
                 'tir' => $tasaTIR . "%",

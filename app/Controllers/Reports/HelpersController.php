@@ -9,10 +9,11 @@ use Carbon\Carbon;
 
 
 use App\Models\Movement;
+use App\Models\Account;
 
 class HelpersController extends Controller
 {
-    static function calcNpv($initInvestment, $appretiation, $periods, $endInvestment = null, $rate)
+    static function calcNpv($initInvestment, $appretiation, $periods, $rate, $endInvestment = null)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -62,7 +63,7 @@ class HelpersController extends Controller
         return $tir;
     }
 
-    static function calcCostBene($initInvestment, $incomes, $expensive,  $periods, $endInvestment = null, $rate)
+    static function calcCostBene($initInvestment, $incomes, $expensive,  $periods, $rate, $endInvestment = null)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -176,8 +177,21 @@ class HelpersController extends Controller
 
     static function canExpensive($amount, $currency)
     {
+        $init_amout = (float)Account::withTrashed()
+            ->where([
+                ['user_id', auth()->user()->id],
+                ['badge_id', $currency],
+            ])
+            ->sum('init_amount');
+
+        if ($init_amout) {
+            $saldoActual = $init_amout;
+        } else {
+            $saldoActual = 0;
+        }
+
         // Calcular el saldo actual
-        $saldoActual = (float)Movement::where([
+        $balances = (float)Movement::where([
             ['user_id', auth()->user()->id],
         ])
             ->whereHas('account', function ($query) use ($currency) {
@@ -185,10 +199,8 @@ class HelpersController extends Controller
             })
             ->sum('amount');
 
-        if ($saldoActual) {
-            $saldoActual = $saldoActual;
-        } else {
-            $saldoActual = 0;
+        if ($balances) {
+            $saldoActual += $balances;
         }
 
         $year = Carbon::now()->year;
@@ -206,11 +218,33 @@ class HelpersController extends Controller
                 ['group_id', '<>', env('GROUP_TRANSFER_ID')],
             ])
             ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
             ->whereYear('date_purchase', $year)
             ->groupBy('year', 'month')
             ->pluck('promedio_mensual', 'month');
 
-            $avgIncomeMonthly = Movement::selectRaw('
+        $avgExpensiveTransMonthly = Movement::selectRaw('
+            YEAR(date_purchase) as year,
+            MONTH(date_purchase) as month,
+            sum(amount) as promedio_mensual
+        ')
+            ->where([
+                ['movements.user_id', auth()->user()->id],
+                ['amount', '<', 0],
+                ['group_id', '=', env('GROUP_TRANSFER_ID')],
+                ['trm', '<>', 1],
+            ])
+            ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
+            ->whereYear('date_purchase', $year)
+            ->groupBy('year', 'month')
+            ->pluck('promedio_mensual', 'month');
+
+        $avgIncomeMonthly = Movement::selectRaw('
             YEAR(date_purchase) as year,
             MONTH(date_purchase) as month,
             sum(amount) as promedio_mensual
@@ -221,49 +255,117 @@ class HelpersController extends Controller
                 ['group_id', '<>', env('GROUP_TRANSFER_ID')],
             ])
             ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
             ->whereYear('date_purchase', $year)
             ->groupBy('year', 'month')
             ->pluck('promedio_mensual', 'month');
-        
-        $actualExpensive = (float)Movement::where([
+
+        $avgIncomeTransMonthly = Movement::selectRaw('
+            YEAR(date_purchase) as year,
+            MONTH(date_purchase) as month,
+            sum(amount) as promedio_mensual
+        ')
+            ->where([
                 ['movements.user_id', auth()->user()->id],
-                ['amount', '<', 0],
-                ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+                ['amount', '>', 0],
+                ['group_id', '=', env('GROUP_TRANSFER_ID')],
+                ['trm', '<>', 1],
             ])
             ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
+            ->whereYear('date_purchase', $year)
+            ->groupBy('year', 'month')
+            ->pluck('promedio_mensual', 'month');
+
+        $actualExpensive = (float)Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['amount', '<', 0],
+            ['group_id', '<>', env('GROUP_TRANSFER_ID')],
+        ])
+            ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
             ->whereYear('date_purchase', $year)
             ->whereMonth('date_purchase', $month)
             ->sum('amount');
-                    
+
+        $actualExpensive += (float)Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['amount', '<', 0],
+            ['group_id', '=', env('GROUP_TRANSFER_ID')],
+            ['trm', '<>', 1],
+        ])
+            ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
+            ->whereYear('date_purchase', $year)
+            ->whereMonth('date_purchase', $month)
+            ->sum('amount');
+
         $actualIncome = (float)Movement::where([
             ['movements.user_id', auth()->user()->id],
             ['amount', '>', 0],
             ['group_id', '<>', env('GROUP_TRANSFER_ID')],
         ])
-        ->join('categories', 'categories.id', 'movements.category_id')
-        ->whereYear('date_purchase', $year)
-        ->whereMonth('date_purchase', $month)
-        ->sum('amount');
+            ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
+            ->whereYear('date_purchase', $year)
+            ->whereMonth('date_purchase', $month)
+            ->sum('amount');
+
+        $actualIncome += (float)Movement::where([
+            ['movements.user_id', auth()->user()->id],
+            ['amount', '>', 0],
+            ['group_id', '=', env('GROUP_TRANSFER_ID')],
+            ['trm', '<>', 1],
+        ])
+            ->join('categories', 'categories.id', 'movements.category_id')
+            ->whereHas('account', function ($query) use ($currency) {
+                $query->where('badge_id', '=', $currency);
+            })
+            ->whereYear('date_purchase', $year)
+            ->whereMonth('date_purchase', $month)
+            ->sum('amount');
 
 
         $avgExpensiveMonthly = array_reduce($avgExpensiveMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgExpensiveMonthly);
-        
+        $avgExpensiveMonthly += array_reduce($avgExpensiveTransMonthly->toArray(), function ($carry, $item) {
+            return $carry + $item;
+        }, 0) / count($avgExpensiveTransMonthly);
+
         $avgIncomeMonthly = array_reduce($avgIncomeMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgIncomeMonthly);
+        $avgIncomeMonthly += array_reduce($avgIncomeTransMonthly->toArray(), function ($carry, $item) {
+            return $carry + $item;
+        }, 0) / count($avgIncomeTransMonthly);
 
-        $message = "Tu saldo actual es de : " . number_format($saldoActual, 2, '.', ',') . " y tus ingresos promedios son de: " .
-        number_format($avgIncomeMonthly, 2, '.', ',') . ", ademas tienes unos gastos promedios de : ". number_format($avgExpensiveMonthly, 2, '.', ',') .
-        " en lo que va del mes te ha ingrsado: ". number_format($actualIncome, 2, '.', ',') . " y haz gastado: ". number_format($actualExpensive, 2, '.', ',');
+        $addIncomes = $actualIncome >= $avgIncomeMonthly ? 0 : $avgIncomeMonthly - $actualIncome;
+        $addExpensives = $avgExpensiveMonthly >= $actualExpensive ? 0 : $avgExpensiveMonthly - $actualExpensive;
+
+        $futureBalance = $saldoActual + $addIncomes + $addExpensives;
+
+        $message = "Tu saldo actual es de: " . number_format($saldoActual, 2, '.', ',') . " y tus ingresos promedios son de: " .
+            number_format($avgIncomeMonthly, 2, '.', ',') . ", ademas tienes unos gastos promedios de: " . number_format($avgExpensiveMonthly, 2, '.', ',') .
+            " en lo que va del mes te ha ingresado: " . number_format($actualIncome, 2, '.', ',') . " y haz gastado: " . number_format($actualExpensive, 2, '.', ',') .
+            ", Lo que quiere decir que al finalizar el mes si todo se comporta normal quedarias con un saldo de: " . number_format($futureBalance, 2, '.', ',');
 
 
-        /*if ($saldoActual - ($avgExpensiveMonthly + $actualExpensive) >= $amount) {
-            $message = "Puedes gastar " . number_format($amount, 2, '.', ',') . ". Tu saldo actual es suficiente.";
+        if ($futureBalance >= $amount) {
+            $message = $message . ", y podrias gastar " . number_format($amount, 2, '.', ',') . ", dejandote con un saldo de: " . number_format($futureBalance - $amount, 2, '.', ',');
         } else {
-            $message = "No puedes gastar " . number_format($amount, 2, '.', ',') . ". Tu saldo actual es insuficiente.";
-        }*/
+            $message = $message . ", y No puedes gastar " . number_format($amount, 2, '.', ',') . " ya que quedarias en saldo negativo y tocaria pedir un prestamo.";
+        }
 
         return $message;
     }
