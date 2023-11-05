@@ -42,7 +42,7 @@ return new class extends Migration
                 where movements.user_id = user_id() and date(date_purchase) < init_date() 
                 and badge_id = currency()
             ), get_init_open as (
-                SELECT ifnull(sum(init_amount), 0) as init_open from accounts
+                SELECT ifnull(sum(if(type_id <> 6, init_amount, 0)), 0) as init_open from accounts
                 where user_id = user_id() and badge_id = currency()
                 and date(created_at) < init_date()
             ), get_end_move as (
@@ -52,7 +52,7 @@ return new class extends Migration
                 where movements.user_id = user_id() and date(date_purchase) <= end_date() 
                 and badge_id = currency()
             ), get_init_end as (
-                SELECT ifnull(sum(init_amount), 0) as init_end from accounts
+                SELECT ifnull(sum(if(type_id <> 6, init_amount, 0)), 0) as init_end from accounts
                 where user_id = user_id() and badge_id = currency()
                 and date(created_at) <= end_date()
             ), sum_open as (
