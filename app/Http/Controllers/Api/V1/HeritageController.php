@@ -39,6 +39,9 @@ class HeritageController extends Controller
                  ->where('investment_appreciations.date_appreciation', '=', DB::raw("(SELECT MAX(date_appreciation) FROM investment_appreciations WHERE investment_id = investments.id and year(date_appreciation) = $year)"));
         })
         ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
+        ->where([
+            ['investments.user_id', $user->id]
+        ])
         ->groupBy('currencies.code')
         ->get();
 
@@ -288,6 +291,7 @@ class HeritageController extends Controller
                 })
                 ->where([
                     ['badge_id', $balance->badge_id],
+                    ['investments.user_id', auth()->user()->id],
                 ])
                 ->whereYear('date_appreciation', '<=', $value->year)
                 ->join('currencies', 'currencies.id', '=', 'investments.badge_id')
