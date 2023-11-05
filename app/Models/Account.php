@@ -26,6 +26,7 @@ class Account extends Model
         'badge_id',
         'init_amount',
         'limit',
+        'interest',
         'type_id',
         'user_id',
     ];
@@ -48,7 +49,9 @@ class Account extends Model
         'deleted_at' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
-        'init_amount' => 'float'
+        'init_amount' => 'float',
+        'limit' => 'float',
+        'interest' => 'float'
     ];
 
     public function user()
