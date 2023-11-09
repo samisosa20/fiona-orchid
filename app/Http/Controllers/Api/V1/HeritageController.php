@@ -146,11 +146,17 @@ class HeritageController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Heritage  $heritage
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Heritage $heritage)
+    public function show(int $id)
     {
+        $heritage = Heritage::where([
+            ['user_id', auth()->user()->id],
+            ['id', $id],
+        ])
+            ->with(['currency'])
+            ->first();
         return response()->json($heritage);
     }
 
