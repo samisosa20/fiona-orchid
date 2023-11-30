@@ -24,7 +24,10 @@ class BudgetController extends Controller
         $budgets = Budget::where([
             ['user_id', $user->id]
         ])
-            ->with(['period', 'category', 'currency'])
+            ->with(['period', 'currency'])
+            ->with('category', function ($category) {
+                $category->with('categoryFather');
+            })
             ->when($request->query('year'), function ($query) use ($request) {
                 $query->where('year', $request->query('year'));
             })

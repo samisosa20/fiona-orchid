@@ -80,14 +80,24 @@ class ReportController extends Controller
             ])
                 ->whereDate('date_purchase', '>=', $init_date)
                 ->whereDate('date_purchase', '<=', $end_date)
-                ->selectRaw('categories.id, categories.name as category,
+                ->selectRaw('categories.id, categories.name as category, categories.category_id as category_father,
             ifnull(sum(amount), 0) as amount')
                 ->join('categories', 'movements.category_id', 'categories.id')
                 ->join('accounts', 'account_id', 'accounts.id')
                 ->join('currencies', 'badge_id', 'currencies.id')
-                ->groupBy('categories.id', 'categories.name')
+                ->groupBy('categories.id', 'categories.name', 'categories.category_id')
                 ->orderByRaw('ifnull(sum(amount), 0)')
                 ->get();
+
+            foreach($expensives as &$expense)
+            {
+                $expense->category_father = Category::where([
+                    ['user_id', $user->id],
+                    ['id', $expense->category_father]
+                ])
+                ->pluck('name')
+                ->first();
+            }
 
             $expensives_transfer = Movement::where([
                 ['movements.user_id', $user->id],
