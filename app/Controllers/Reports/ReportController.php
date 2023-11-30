@@ -247,6 +247,12 @@ class ReportController extends Controller
             foreach ($budgets_monthly as &$budget) {
                 $budget->amount = $budget->amount * $diffMonth;
                 $budget->movement = (float)$budget->movement;
+                $budget->category_father = Category::where([
+                    ['user_id', $user->id],
+                    ['id', $budget->category->category_id]
+                ])
+                ->pluck('name')
+                ->first();
             }
 
             return [
