@@ -19,6 +19,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'badge_id',
         'permissions',
     ];
 
@@ -52,6 +53,7 @@ class User extends Authenticatable implements JWTSubject
         'id',
         'name',
         'email',
+        'badge_id',
         'permissions',
     ];
 
@@ -64,6 +66,7 @@ class User extends Authenticatable implements JWTSubject
         'id',
         'name',
         'email',
+        'badge_id',
         'updated_at',
         'created_at',
     ];
@@ -87,5 +90,4 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(Currency::class, 'id', 'badge_id');
     }
-
 }

@@ -23,7 +23,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        try{
+        try {
 
             $validator = Validator::make($request->all(), [
                 'password' => [
@@ -35,7 +35,7 @@ class AuthController extends Controller
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -65,8 +65,7 @@ class AuthController extends Controller
                 'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
                 'periods' => Period::select('id as value', 'name as label')->get(),
             ]);
-
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  $ex->errorInfo[0] === "23000" ? 'Usuario registrado' : 'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -76,7 +75,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'name' => [
                     'required',
@@ -93,7 +92,7 @@ class AuthController extends Controller
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -130,7 +129,7 @@ class AuthController extends Controller
                 'groups_category' => Group::where([['id', '<>', env('GROUP_TRANSFER_ID')]])->get(),
                 'periods' => CommonTypesController::listPeriodicity(),
             ], 201);
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  $ex->errorInfo[0] === "23000" ? 'El Usuario ya esta registrado' : 'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -140,7 +139,7 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
-        try{
+        try {
             $validator = Validator::make($request->all(), [
                 'email' => [
                     'required',
@@ -148,7 +147,7 @@ class AuthController extends Controller
                 ],
             ]);
 
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
@@ -159,7 +158,7 @@ class AuthController extends Controller
                 ['email', $request->email]
             ])->first();
 
-            if($user){
+            if ($user) {
                 $temp_pass = Str::random(10);
                 $user->password = Hash::make($temp_pass);
                 $user->save();
@@ -167,7 +166,7 @@ class AuthController extends Controller
                 $user->notify(new PasswordResetNotification($temp_pass));
             } else {
                 return response()->json([
-                   'message' => 'Usuario no registrado'
+                    'message' => 'Usuario no registrado'
                 ], 400);
             }
 
@@ -177,7 +176,7 @@ class AuthController extends Controller
                 'message' => 'Te Llegara una email, con mas informacion',
                 'data' => [],
             ]);
-        } catch(\Illuminate\Database\QueryException $ex){
+        } catch (\Illuminate\Database\QueryException $ex) {
             return response([
                 'message' =>  'Datos no guardados',
                 'detail' => $ex->errorInfo[0]
@@ -191,7 +190,7 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Se cerro la sesion exitosamente']);
     }
-    
+
     public function currencies(Request $request)
     {
         return response()->json(Currency::select('id', 'code', 'name')->get());
