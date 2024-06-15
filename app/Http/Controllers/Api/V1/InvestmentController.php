@@ -181,8 +181,8 @@ class InvestmentController extends Controller
 
         $total_add_withdrawal = $data->init_amount + $data->add_withdrawal;
 
-        $data->valorization = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
-        $data->total_rate = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount + $data->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+        $data->valorization = $total_add_withdrawal == 0 ?  "0%" : round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+        $data->total_rate = $total_add_withdrawal == 0 ?  "0%" : round(($end_amount + $data->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
 
         if ($data) {
             return response()->json($data);
