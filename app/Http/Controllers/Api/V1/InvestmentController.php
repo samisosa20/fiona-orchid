@@ -107,7 +107,6 @@ class InvestmentController extends Controller
                 'init_amount' => [
                     'required',
                     'numeric',
-                    'min:0.01'
                 ],
                 'badge_id' => [
                     'required',
@@ -122,6 +121,13 @@ class InvestmentController extends Controller
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
+                ], 400)->header('Content-Type', 'json');
+            }
+
+            if ($request->init_amount <= 0) {
+                return response([
+                    'message' => 'Monto inicial debe ser mayor a 0',
+                    'detail' => 'valor debe ser mayor a 0'
                 ], 400)->header('Content-Type', 'json');
             }
 
