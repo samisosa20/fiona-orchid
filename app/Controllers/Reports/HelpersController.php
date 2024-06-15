@@ -336,17 +336,17 @@ class HelpersController extends Controller
             ->sum('amount');
 
 
-        $avgExpensiveMonthly = array_reduce($avgExpensiveMonthly->toArray(), function ($carry, $item) {
+        $avgExpensiveMonthly = count($avgExpensiveMonthly) == 0 ? 0 : array_reduce($avgExpensiveMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgExpensiveMonthly);
-        $avgExpensiveMonthly += array_reduce($avgExpensiveTransMonthly->toArray(), function ($carry, $item) {
+        $avgExpensiveMonthly += count($avgExpensiveTransMonthly) == 0 ? 0 : array_reduce($avgExpensiveTransMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgExpensiveTransMonthly);
 
-        $avgIncomeMonthly = array_reduce($avgIncomeMonthly->toArray(), function ($carry, $item) {
+        $avgIncomeMonthly = count($avgIncomeMonthly) == 0 ? 0 : array_reduce($avgIncomeMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgIncomeMonthly);
-        $avgIncomeMonthly += array_reduce($avgIncomeTransMonthly->toArray(), function ($carry, $item) {
+        $avgIncomeMonthly += count($avgIncomeTransMonthly) == 0 ? 0 : array_reduce($avgIncomeTransMonthly->toArray(), function ($carry, $item) {
             return $carry + $item;
         }, 0) / count($avgIncomeTransMonthly);
 
