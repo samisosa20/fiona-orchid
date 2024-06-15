@@ -71,8 +71,8 @@ class InvestmentController extends Controller
 
             $total_add_withdrawal = $investment->init_amount + $investment->add_withdrawal;
 
-            $investment->valorization = round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
-            $investment->total_rate = round(($end_amount + $investment->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+            $investment->valorization = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+            $investment->total_rate = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount + $investment->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
         }
 
         return response()->json([
@@ -121,13 +121,6 @@ class InvestmentController extends Controller
                 return response([
                     'message' => 'data missing',
                     'detail' => $validator->errors()
-                ], 400)->header('Content-Type', 'json');
-            }
-
-            if ($request->init_amount <= 0) {
-                return response([
-                    'message' => 'Monto inicial debe ser mayor a 0',
-                    'detail' => 'valor debe ser mayor a 0'
                 ], 400)->header('Content-Type', 'json');
             }
 
@@ -188,8 +181,8 @@ class InvestmentController extends Controller
 
         $total_add_withdrawal = $data->init_amount + $data->add_withdrawal;
 
-        $data->valorization = round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
-        $data->total_rate = round(($end_amount + $data->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+        $data->valorization = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
+        $data->total_rate = $total_add_withdrawal === 0 ?  "0%" : round(($end_amount + $data->returns - $total_add_withdrawal) / ($total_add_withdrawal) * 100, 2) . "%";
 
         if ($data) {
             return response()->json($data);
