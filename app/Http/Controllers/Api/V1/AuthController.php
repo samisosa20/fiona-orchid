@@ -195,4 +195,16 @@ class AuthController extends Controller
     {
         return response()->json(Currency::select('id', 'code', 'name')->get());
     }
+
+    public function delete(Request $request)
+    {
+        $user = auth()->user();
+        auth()->logout();
+
+        $user = User::findOrFail($user->id);
+
+        $user->delete();
+
+        return response()->json(['message' => 'La cuenta se elimino correctamente']);
+    }
 }

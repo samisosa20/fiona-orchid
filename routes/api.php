@@ -49,7 +49,7 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/budgets-report', [BudgetController::class, 'reportBudget']);
     Route::apiResource('/categories', CategoryController::class);
     Route::get('/categories-list', [CategoryController::class, 'listCategories']);
-    Route::get('/events/active',[ EventController::class, 'active']);
+    Route::get('/events/active', [EventController::class, 'active']);
     Route::apiResource('/events', EventController::class);
     Route::apiResource('/heritages', HeritageController::class);
     Route::get('/heritages-list', [HeritageController::class, 'listYear']);
@@ -64,4 +64,5 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/analytics/project', [ReportController::class, 'testViabilityProject']);
     Route::get('/analytics/canido', [ReportController::class, 'canido']);
     Route::apiResource('/profile', UserController::class);
+    Route::delete('/close-account', [AuthController::class, 'delete']);
 });
