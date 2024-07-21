@@ -53,20 +53,19 @@ class Budget extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
-    
+
     public function category()
     {
-        return $this->hasOne(Category::class, 'id', 'category_id');
+        return $this->hasOne(Category::class, 'id', 'category_id')->withTrashed();
     }
-    
+
     public function period()
     {
         return $this->hasOne(Period::class, 'id', 'period_id');
     }
-    
+
     public function currency()
     {
         return $this->hasOne(Currency::class, 'id', 'badge_id');
     }
-    
 }
