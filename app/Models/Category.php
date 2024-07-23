@@ -51,20 +51,20 @@ class Category extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
-    
+
     public function group()
     {
         return $this->hasOne(Group::class, 'id', 'group_id');
     }
-    
+
     public function categoryFather()
     {
-        return $this->hasOne(Category::class, 'id', 'category_id');
+        return $this->hasOne(Category::class, 'id', 'category_id')->withTrashed();
     }
-    
+
     public function subCategories()
     {
-        return $this->hasMany(Category::class, 'category_id', 'id');
+        return $this->hasMany(Category::class, 'category_id', 'id')->withTrashed();
     }
 
     public function scopeListCategory($query, $user)
@@ -73,8 +73,8 @@ class Category extends Model
             ['categories.user_id', $user],
             ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')]
         ])
-        ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(b.name, "\n ", categories.name)) as title, categories.category_id as category_father')
-        ->leftJoin('categories as b', 'b.id', 'categories.category_id')
-        ->orderBy('categories.name');
+            ->selectRaw('categories.id, if(categories.category_id is null, categories.name, concat(b.name, "\n ", categories.name)) as title, categories.category_id as category_father')
+            ->leftJoin('categories as b', 'b.id', 'categories.category_id')
+            ->orderBy('categories.name');
     }
 }

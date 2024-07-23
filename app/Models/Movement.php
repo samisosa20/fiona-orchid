@@ -68,17 +68,17 @@ class Movement extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
-    
+
     public function category()
     {
-        return $this->hasOne(Category::class, 'id', 'category_id');
+        return $this->hasOne(Category::class, 'id', 'category_id')->withTrashed();
     }
-    
+
     public function account()
     {
         return $this->hasOne(Account::class, 'id', 'account_id')->withTrashed();
     }
-    
+
     public function transferOut()
     {
         return $this->hasOne(Movement::class, 'id', 'transfer_id')->with('account');
@@ -88,7 +88,7 @@ class Movement extends Model
     {
         return $this->hasOne(Movement::class, 'transfer_id', 'id')->with('account');
     }
-    
+
     public function event()
     {
         return $this->hasOne(Event::class, 'id', 'event_id');
@@ -97,33 +97,33 @@ class Movement extends Model
     {
         return $this->hasOne(Investment::class, 'id', 'investment_id');
     }
-    
+
     public function scopeFilter($query, $request)
     {
         $query->when($request->query('category'), function ($query) use ($request) {
-            $query->whereHas('category', function($query) use ($request){
-                $query->where('name', 'like', '%'.$request->query('category').'%');
+            $query->whereHas('category', function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->query('category') . '%');
             });
         })
-        ->when($request->query('amount'), function ($query) use ($request) {
-            $query->where('amount', '=', $request->query('amount'));
-        })
-        ->when($request->query('description'), function ($query) use ($request) {
-            $query->where('description', 'like', '%'.$request->query('description').'%');
-        })
-        ->when($request->query('date'), function ($query) use ($request) {
-            $query->whereDate('date_purchase', '=' , $request->query('date'));
-        })
-        ->when($request->query('start_date'), function ($query) use ($request) {
-            $query->whereDate('date_purchase', '>=' , $request->query('start_date'));
-        })
-        ->when($request->query('end_date'), function ($query) use ($request) {
-            $query->whereDate('date_purchase', '<=' , $request->query('end_date'));
-        })
-        ->when($request->query('event_id'), function ($query) use ($request) {
-            $query->whereHas('event', function($query) use ($request){
-                $query->where('id', '=', $request->query('event_id'));
+            ->when($request->query('amount'), function ($query) use ($request) {
+                $query->where('amount', '=', $request->query('amount'));
+            })
+            ->when($request->query('description'), function ($query) use ($request) {
+                $query->where('description', 'like', '%' . $request->query('description') . '%');
+            })
+            ->when($request->query('date'), function ($query) use ($request) {
+                $query->whereDate('date_purchase', '=', $request->query('date'));
+            })
+            ->when($request->query('start_date'), function ($query) use ($request) {
+                $query->whereDate('date_purchase', '>=', $request->query('start_date'));
+            })
+            ->when($request->query('end_date'), function ($query) use ($request) {
+                $query->whereDate('date_purchase', '<=', $request->query('end_date'));
+            })
+            ->when($request->query('event_id'), function ($query) use ($request) {
+                $query->whereHas('event', function ($query) use ($request) {
+                    $query->where('id', '=', $request->query('event_id'));
+                });
             });
-        });
     }
 }

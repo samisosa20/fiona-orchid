@@ -88,14 +88,14 @@ class ReportController extends Controller
                 ->orderByRaw('ifnull(sum(amount), 0)')
                 ->get();
 
-            foreach($expensives as &$expense)
-            {
+            foreach ($expensives as &$expense) {
                 $expense->category_father = Category::where([
                     ['user_id', $user->id],
                     ['id', $expense->category_father]
                 ])
-                ->pluck('name')
-                ->first();
+                    ->withTrashed()
+                    ->pluck('name')
+                    ->first();
             }
 
             $expensives_transfer = Movement::where([
@@ -230,7 +230,7 @@ class ReportController extends Controller
             ])
                 ->with(['category'])
                 ->addSelect([
-                    'movement' => \DB::table('movements')
+                    'movement' => DB::table('movements')
                         ->selectRaw('ifnull(sum(amount), 0)')
                         ->join('accounts', 'accounts.id', 'movements.account_id')
                         ->whereColumn('movements.category_id', 'budgets.category_id')
@@ -242,7 +242,7 @@ class ReportController extends Controller
                 ->get();
 
             $diffMonth = $end->diffInMonths($init) + 1;
-            
+
             foreach ($budgets_monthly as &$budget) {
                 $budget->amount = $budget->amount * $diffMonth;
                 $budget->movement = (float)$budget->movement;
@@ -250,8 +250,9 @@ class ReportController extends Controller
                     ['user_id', $user->id],
                     ['id', $budget->category->category_id]
                 ])
-                ->pluck('name')
-                ->first();
+                    ->withTrashed()
+                    ->pluck('name')
+                    ->first();
             }
 
             return [
