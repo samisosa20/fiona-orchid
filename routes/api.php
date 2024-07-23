@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\InvestmentController;
 use App\Http\Controllers\Api\V1\AppretiationController;
+use App\Http\Controllers\Api\V1\SupportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,4 +66,5 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::get('/analytics/canido', [ReportController::class, 'canido']);
     Route::apiResource('/profile', UserController::class);
     Route::delete('/close-account', [AuthController::class, 'delete']);
+    Route::apiResource('/supports', SupportController::class);
 });
