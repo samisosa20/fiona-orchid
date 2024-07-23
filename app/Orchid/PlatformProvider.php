@@ -28,50 +28,7 @@ class PlatformProvider extends OrchidServiceProvider
     public function registerMainMenu(): array
     {
         return [
-            Menu::make(__('Movements'))
-                ->icon('move')
-                ->route('platform.movement.create'),
-
-            Menu::make(__('Accounts'))
-                ->icon('monitor')
-                ->route('platform.accounts'),
-
-            Menu::make(__('Events'))
-                ->icon('hourglass')
-                ->route('platform.events'),
             
-            Menu::make(__('Investments'))
-                ->icon('money')
-                ->route('platform.investments'),
-
-            Menu::make(__('Budget'))
-                ->icon('flag')
-                ->list([
-                    Menu::make(__('Create'))
-                    ->icon('plus')
-                    ->route('platform.budgets'),
-                    Menu::make(__('Report'))
-                    ->icon('docs')
-                    ->route('platform.budgets.report'),
-                ]),
-            
-            Menu::make(__('Heritages'))
-                ->icon('book-open')
-                ->route('platform.heritages'),
-
-            Menu::make(__('Settings'))
-                ->icon('code')
-                ->list([
-                    Menu::make(__('Categories'))
-                    ->icon('bag')
-                    ->route('platform.categories'),
-                    Menu::make(__('Payments'))
-                    ->icon('heart')
-                    ->route('platform.payments'),
-                ])
-                ->title(__('Settings')),
-
-
             Menu::make(__('Users'))
                 ->icon('user')
                 ->route('platform.systems.users')
@@ -91,9 +48,6 @@ class PlatformProvider extends OrchidServiceProvider
     public function registerProfileMenu(): array
     {
         return [
-            Menu::make(__('Profile'))
-                ->route('platform.profile')
-                ->icon('user'),
         ];
     }
 

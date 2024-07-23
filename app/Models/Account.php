@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Orchid\Screen\AsSource;
+use Orchid\Attachment\Attachable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
 
 use App\Models\User;
 use App\Models\Movement;
@@ -13,7 +17,7 @@ use App\Models\TypeAccount;
 
 class Account extends Model
 {
-    use HasFactory, SoftDeletes;
+    use AsSource, Filterable, Attachable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +33,20 @@ class Account extends Model
         'interest',
         'type_id',
         'user_id',
+    ];
+
+    /**
+     * The attributes for which you can use filters in url.
+     *
+     * @var array
+     */
+    protected $allowedFilters = [
+        'id' => Where::class,
+        'description' => Like::class,
+        'name' => Like::class,
+        'type_id' => Where::class,
+        'badge_id' => Where::class,
+        'user_id' => Where::class,
     ];
 
     /**

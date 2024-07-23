@@ -11,6 +11,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "nesbot/carbon": "^2.66",
+        "orchid/crud": "^4.2",
         "orchid/icons": "^2.2",
         "orchid/platform": "^14.0.0",
         "phpoffice/phpexcel": "^1.8",

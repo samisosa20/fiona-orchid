@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Orchid\Screen\AsSource;
+use Orchid\Attachment\Attachable;
+use Orchid\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
@@ -10,7 +12,7 @@ use App\Models\Currency;
 
 class Heritage extends Model
 {
-    use HasFactory;
+    use AsSource, Filterable, Attachable;
 
     /**
      * The attributes that are mass assignable.

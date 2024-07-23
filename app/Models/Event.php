@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Orchid\Screen\AsSource;
+use Orchid\Attachment\Attachable;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
+use Orchid\Filters\Types\WhereDateStartEnd;
+use Orchid\Filters\Filterable;
 
 use App\Models\User;
 use App\Models\Movement;
 
 class Event extends Model
 {
-    use HasFactory;
+    use AsSource, Filterable, Attachable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +26,19 @@ class Event extends Model
         'name',
         'end_event',
         'user_id',
+    ];
+
+
+    /**
+     * The attributes for which you can use filters in url.
+     *
+     * @var array
+     */
+    protected $allowedFilters = [
+        'id' => Where::class,
+        'name' => Like::class,
+        'end_event' => WhereDateStartEnd::class,
+        'user_id' => Where::class,
     ];
 
     /**
