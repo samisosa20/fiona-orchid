@@ -9,6 +9,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Notifications\PasswordResetNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Registered;
 
 use App\Models\User;
 use App\Models\Category;
@@ -114,6 +115,8 @@ class AuthController extends Controller
             ]);
 
             $token = JWTAuth::fromUser($user);
+
+            event(new Registered($user));
 
             return response()->json([
                 'message' => 'Usuario registrado exitosamente',

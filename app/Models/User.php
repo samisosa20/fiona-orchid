@@ -4,12 +4,16 @@ namespace App\Models;
 
 use Orchid\Platform\Models\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Notifications\Notifiable;
 
 use App\Models\Category;
 use App\Models\Currency;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, MustVerifyEmailContract
 {
+    use Notifiable;
+
     /**
      * The attributes that are mass assignable.
      *
