@@ -18,7 +18,7 @@ class BlogController extends Controller
         ->where([
             ['published', true]
         ])
-        ->paginate();
+        ->get();
     }
 
     /**

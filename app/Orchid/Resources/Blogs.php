@@ -49,7 +49,8 @@ class Blogs extends Resource
             Quill::make('content')
                 ->title('content')
                 ->required()
-                ->placeholder('Enter slug here'),
+                ->placeholder('Enter slug here')
+                ->base64(true),
         ];
     }
 

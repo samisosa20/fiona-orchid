@@ -36,7 +36,8 @@ class SupportResponses extends Resource
                 ->title(__('Support')),
             Quill::make('content')
                 ->title('content')
-                ->required(),
+                ->required()
+                ->base64(true),
         ];
     }
 
