@@ -15,7 +15,9 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\InvestmentController;
 use App\Http\Controllers\Api\V1\AppretiationController;
+use App\Http\Controllers\Api\V1\BlogController;
 use App\Http\Controllers\Api\V1\SupportController;
+use App\Http\Controllers\Api\V1\VerificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot', [AuthController::class, 'resetPassword']);
     Route::get('/currencies', [AuthController::class, 'currencies']);
+    Route::get('blogs', [BlogController::class, 'index']);
+    Route::get('blogs/{slug}', [BlogController::class, 'show']);
 });
 
 // Private routes
@@ -67,4 +71,9 @@ Route::middleware('auth.api')->prefix('v1')->group(function () {
     Route::apiResource('/profile', UserController::class);
     Route::delete('/close-account', [AuthController::class, 'delete']);
     Route::apiResource('/supports', SupportController::class);
+
+    Route::controller(VerificationController::class)->group(function () {
+        Route::post('/email/resend', 'resend')->name('verification.resend');
+        Route::get('/auth/verify/{id}/{hash}', 'verify')->name('auth.verify');
+    });
 });
