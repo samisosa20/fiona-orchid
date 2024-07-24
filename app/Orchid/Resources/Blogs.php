@@ -7,6 +7,7 @@ use App\Models\Blog;
 use Orchid\Crud\Resource;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Quill;
+use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\TD;
 
 class Blogs extends Resource
@@ -28,15 +29,21 @@ class Blogs extends Resource
         return [
             Input::make('title')
                 ->title('title')
+                ->required()
+                ->maxlength(250)
                 ->placeholder('Enter title here'),
-            Quill::make('description')
+            TextArea::make('description')
                 ->title('description')
+                ->maxlength(250)
+                ->required()
                 ->placeholder('Enter description here'),
             Input::make('slug')
                 ->title('slug')
+                ->required()
                 ->placeholder('Enter slug here'),
             Quill::make('content')
                 ->title('content')
+                ->required()
                 ->placeholder('Enter slug here'),
         ];
     }
