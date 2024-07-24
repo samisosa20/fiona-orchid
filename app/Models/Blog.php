@@ -21,6 +21,15 @@ class Blog extends Model
         'description',
         'content',
         'slug',
-        'published_at',
+        'published',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'published' => 'boolean',
     ];
 }

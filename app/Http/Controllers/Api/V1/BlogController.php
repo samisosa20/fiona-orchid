@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
+use App\Models\Blog;
+
 class BlogController extends Controller
 {
     /**
@@ -12,7 +14,11 @@ class BlogController extends Controller
      */
     public function index()
     {
-        //
+        return Blog::select("title", "slug", "description")
+        ->where([
+            ['published', true]
+        ])
+        ->paginate();
     }
 
     /**
@@ -34,9 +40,18 @@ class BlogController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $slug)
     {
-        //
+        $blog = Blog::where('slug', $slug)
+        ->select("title", "description", "content")
+        ->first();
+        if(!$blog) {
+            return response([
+                'message' =>  'El blog no existe',
+                'detail' => 'El blog no existe'
+            ], 400);
+        }
+        return response()->json($blog);
     }
 
     /**

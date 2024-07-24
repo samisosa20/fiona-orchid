@@ -57,6 +57,7 @@ class AuthController extends Controller
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
+                    'verify_email' => !!$user->email_verified_at,
                     'transfer_id' => $user->transferId->id,
                     'currency' => $user->badge_id,
                 ],
@@ -123,6 +124,7 @@ class AuthController extends Controller
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
+                    'verify_email' => !!$user->email_verified_at,
                     'transfer_id' => $user->transferId->id,
                     'currency' => $user->badge_id,
                 ],

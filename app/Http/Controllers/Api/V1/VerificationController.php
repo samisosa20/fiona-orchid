@@ -53,7 +53,7 @@ class VerificationController extends Controller
     {
         $request->user()->sendEmailVerificationNotification();
         return response()->json([
-            'message' => 'Se Reenvio email de verificacion',
+            'message' => 'Se reenvio email de verificación',
             'data' => [],
         ]);
     }

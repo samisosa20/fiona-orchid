@@ -2,23 +2,22 @@
 
 namespace App\Orchid\Resources;
 
-use App\Models\Blog;
+use App\Models\Support;
+use App\Models\SupportResponse;
 
 use Orchid\Crud\Resource;
-use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Quill;
-use Orchid\Screen\Fields\Switcher;
-use Orchid\Screen\Fields\TextArea;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\TD;
 
-class Blogs extends Resource
+class SupportResponses extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
      * @var string
      */
-    public static $model = Blog::class;
+    public static $model = SupportResponse::class;
 
     /**
      * Get the fields displayed by the resource.
@@ -28,28 +27,16 @@ class Blogs extends Resource
     public function fields(): array
     {
         return [
-            Switcher::make('published')
-                ->title('Is public?')
-                ->sendTrueOrFalse()
-                ->placeholder('Do you want public this blog?'),
-            Input::make('title')
-                ->title('title')
+            Select::make('support_id')
+                ->fromModel(Support::selectRaw("CONCAT(supports.id, ' - ', subject, ' - ', users.email) as name, supports.id")
+                ->join("users", "supports.user_id", "=", "users.id")
+                , 'name')
+                ->empty()
                 ->required()
-                ->maxlength(250)
-                ->placeholder('Enter title here'),
-            TextArea::make('description')
-                ->title('description')
-                ->maxlength(250)
-                ->required()
-                ->placeholder('Enter description here'),
-            Input::make('slug')
-                ->title('slug')
-                ->required()
-                ->placeholder('Enter slug here'),
+                ->title(__('Support')),
             Quill::make('content')
                 ->title('content')
-                ->required()
-                ->placeholder('Enter slug here'),
+                ->required(),
         ];
     }
 
@@ -62,12 +49,8 @@ class Blogs extends Resource
     {
         return [
             TD::make('id'),
-            TD::make('title'),
-            TD::make('slug'),
-            TD::make('published')
-            ->render(function ($model) {
-                return $model->published ? 'On' : 'Off';
-            }),
+
+            TD::make('support_id'),
 
             TD::make('created_at', 'Date of creation')
                 ->render(function ($model) {
@@ -99,16 +82,5 @@ class Blogs extends Resource
     public function filters(): array
     {
         return [];
-    }
-
-
-    /**
-     * Get the permission key for the resource.
-     *
-     * @return string|null
-     */
-    public static function permission(): ?string
-    {
-        return 'platform.systems.users';
     }
 }
