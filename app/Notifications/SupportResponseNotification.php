@@ -39,7 +39,7 @@ class SupportResponseNotification extends Notification
     {
         return (new MailMessage)
             ->subject('EMMA - Respuesta de tu soporte')
-            ->view('emails.support_response', [
+            ->markdown('mail.support_response', [
                 'htmlContent' => $this->supportResponse->content,
                 'name' => $this->supportResponse->support->user->name,
             ]);
