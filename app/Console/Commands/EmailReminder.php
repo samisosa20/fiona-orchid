@@ -38,9 +38,13 @@ class EmailReminder extends Command
         ->get();
 
         foreach ($users as $user) {
-            $fecha = Carbon::parse($user->last_movement);
-            $diasDiferencia = $fecha->diffInDays(Carbon::now());
-            if ($diasDiferencia >= 10) {
+            if($user->last_movement) {
+                $fecha = Carbon::parse($user->last_movement);
+                $diasDiferencia = $fecha->diffInDays(Carbon::now());
+                if ($diasDiferencia >= 10) {
+                    Notification::route('mail', $user->email)->notify(new ReminderLoginEmail([]));
+                }
+            } else {
                 Notification::route('mail', $user->email)->notify(new ReminderLoginEmail([]));
             }
         }

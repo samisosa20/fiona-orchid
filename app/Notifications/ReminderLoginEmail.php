@@ -35,15 +35,15 @@ class ReminderLoginEmail extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage())
-            ->subject('¡Te extrañamos!¡Solo necesitas 10 minutos a la semana! - FionaApp')
+            ->subject('EMMA - ¡Te extrañamos!¡Solo necesitas 10 minutos a la semana!')
             ->greeting('¡Hola!')
-            ->line('Esperamos que te encuentres bien y disfrutando de tus días. ¿Sabías que te hemos estado extrañando en Fiona?')
+            ->line('Esperamos que te encuentres bien y disfrutando de tus días. ¿Sabías que te hemos estado extrañando en Emma?')
             ->line('¡No te preocupes! No estamos aquí para reñirte, ¡solo queremos verte más a menudo! 😄 Sabemos que la vida puede ser ocupada, pero sacar solo 10 minutos a la semana para reportar puede hacer una gran diferencia.')
             ->line('¡Y estamos seguros de que esos 10 minutos serán los más divertidos de tu semana! Puedes hacerlo mientras tomas un café, escuchas tu canción favorita o incluso cuando te tomas un merecido descanso.')
             ->line('Si tienes alguna pregunta o necesitas ayuda, no dudes en ponerte en contacto con nuestro equipo de soporte. Estamos aquí para hacer que esta experiencia sea lo más sencilla y agradable posible.')
-            ->action('Ir a FIONA', url('https://fiona.itpmsoftware.com'))
+            ->action('Ir a Emma', url('https://https://finanzaspersonalesemma.com/login'))
             ->line('¡Diviértete y cuídate!')
-            ->salutation('Atentamente, Fiona');
+            ->salutation('Atentamente, Emma');
     }
 
     /**

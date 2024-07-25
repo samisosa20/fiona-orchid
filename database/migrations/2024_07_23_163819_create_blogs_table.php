@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('description');
-            $table->text('content');
+            $table->longText('content');
             $table->string('slug')->unique();
             $table->boolean('published')->default(0);
             $table->timestamps();
