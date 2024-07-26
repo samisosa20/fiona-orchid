@@ -1,8 +1,9 @@
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>email</title>
 
     <style>
@@ -12,7 +13,7 @@
             margin: 0 auto !important;
             background: #201d2c !important;
         }
-        
+
         .body {
             background: #201d2c !important;
             font-family: "Nunito Sans", sans-serif;
@@ -98,7 +99,7 @@
         .mt-16 {
             margin-top: 4rem;
         }
-        
+
         .mx-auto {
             margin-left: auto;
             margin-right: auto;
@@ -111,6 +112,7 @@
         .table-tyc td {
             text-align: center;
         }
+
         .table-tyc a {
             font-size: 12px;
             font-weight: 400;
@@ -126,59 +128,55 @@
         }
     </style>
 </head>
+
 <body>
-<div class="body">
-    <div class="text-center">
-        <img
-            src="https://api.finanzaspersonalesemma.com/img/logo.png"
-            alt="Logo Emma"
-            class="mx-auto"
-            width="200"
-            height="57"
-        />
-    </div>
-    <div class="text-center mb-10 mt-8">
-        <img
-            src="https://api.finanzaspersonalesemma.com/img/emma-ref-balance.png.png"
-            alt="Balance Emma"
-            width="400"
-            height="145"
-            class="mx-auto"
-        />
-    </div>
-    <h1 class="text-center title mb-6">
-        Hola {{ $user->name }}!
-    </h1>
-    <p class="text-center text-montserrat mb-6">
-        Asi es como va tus finanzas en <span style="color: #facc15;">Emma</span>.
-    </p>
-    <p class="text-center text-montserrat mb-6">
-        Asi van tus finanzas en lo que va del mes
-    </p>
-    <h3 class="text-center text-avenir mb-6">
-        Ingresos: <span style="color: #22c55e;">{{ number_format($balance->income, 2, ',', '.')  }}</span>
-    </h3>
-    <h3 class="text-center text-avenir mb-6">
-        Egresos: <span style="color: #ef4444;">{{ number_format(abs($balance->expensive), 2, ',', '.')  }}</span>
-    </h3>
-    <h3 class="text-center text-avenir mb-6">
-        Utilidad: <span style="color: {{$balance->income + $balance->expensive < 0 ? '#ef4444' : '#22c55e'}};">{{ number_format($balance->income + $balance->expensive, 2, ',', '.') }}</span>
-    </h3>
-    <center>
+    <div class="body">
+        <div class="text-center">
+            <img src="https://api.finanzaspersonalesemma.com/img/logo.png" alt="Logo Emma" class="mx-auto" width="200"
+                height="57" />
+        </div>
+        <div class="text-center mb-10 mt-8">
+            <img src="https://api.finanzaspersonalesemma.com/img/emma-ref-balance.png" alt="Balance Emma" width="400"
+                height="145" class="mx-auto" />
+        </div>
+        <h1 class="text-center title mb-6">
+            Hola {{ $user->name }}!
+        </h1>
         <p class="text-center text-montserrat mb-6">
-            Estamos a pocos dias de que se acabe el mes,<br/> si te falta por ingresa informacion, que esperas para reportarla
+            Asi es como va tus finanzas en <span style="color: #facc15;">Emma</span>.
         </p>
-        <table>
-            <tbody>
-                <tr>
-                    <td><a href="https://finanzaspersonalesemma.com/login" style="text-decoration: none;"><div class="text-center btn mb-6">Ir a la App</div></a></td>
-                </tr>
-            </tbody>
-        </table>
-    </center>
-    <div class="mt-16" style="width: 100%; padding: 4px 0px; background: #363635;">
-        <p class="text-legal mx-auto" style="width: 90%;">© Copyright 2024</p>
+        <p class="text-center text-montserrat mb-6">
+            Asi van tus finanzas en lo que va del mes
+        </p>
+        <h3 class="text-center text-avenir mb-6">
+            Ingresos: <span style="color: #22c55e;">{{ number_format($balance->income, 2, ',', '.') }}</span>
+        </h3>
+        <h3 class="text-center text-avenir mb-6">
+            Egresos: <span style="color: #ef4444;">{{ number_format(abs($balance->expensive), 2, ',', '.') }}</span>
+        </h3>
+        <h3 class="text-center text-avenir mb-6">
+            Utilidad: <span
+                style="color: {{ $balance->income + $balance->expensive < 0 ? '#ef4444' : '#22c55e' }};">{{ number_format($balance->income + $balance->expensive, 2, ',', '.') }}</span>
+        </h3>
+        <center>
+            <p class="text-center text-montserrat mb-6">
+                Estamos a pocos dias de que se acabe el mes,<br /> si te falta por ingresa informacion, que esperas para
+                reportarla
+            </p>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><a href="https://finanzaspersonalesemma.com/login" style="text-decoration: none;">
+                                <div class="text-center btn mb-6">Ir a la App</div>
+                            </a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </center>
+        <div class="mt-16" style="width: 100%; padding: 4px 0px; background: #363635;">
+            <p class="text-legal mx-auto" style="width: 90%;">© Copyright 2024</p>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
