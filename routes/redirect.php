@@ -15,6 +15,6 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::get('/email/verify/{id}/{hash}', function (Request $request) {
+/* Route::get('/email/verify/{id}/{hash}', function (Request $request) {
     return redirect()->away(env('URL_FRONT') . '/verify' . "?i={$request->id}&h={$request->hash}&e={$request->expires}&s={$request->signature}");
-})->name('verification.verify');
+})->name('verification.verify'); */
