@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\VerificationController;
+
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,6 @@ use App\Http\Controllers\Api\V1\VerificationController;
 |
 */
 
-Route::controller(VerificationController::class)->group(function () {
-    Route::get('/email/verify', 'notice')->name('verification.notice');
-});
+Route::get('/email/verify/{id}/{hash}', function (Request $request) {
+    return redirect()->away(env('URL_FRONT') . '/verify' . "?i={$request->id}&h={$request->hash}&e={$request->expires}&s={$request->signature}");
+})->name('verification.verify');
