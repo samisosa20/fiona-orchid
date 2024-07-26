@@ -121,6 +121,10 @@
             color: #B0B1B2;
         }
 
+        .pt-4 {
+            padding-top: 16px;
+        }
+
         @media (min-width: 425px) {
             body {
                 margin: 16px auto;
@@ -131,7 +135,7 @@
 
 <body>
     <div class="body">
-        <div class="text-center mb-10">
+        <div class="text-center mb-10 pt-4">
             <img
                 src="https://api.finanzaspersonalesemma.com/img/logo.png"
                 alt="Logo Emma"

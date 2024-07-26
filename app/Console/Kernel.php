@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('email:reminder')->weekly()->sundays()->at('11:00');
         $schedule->command('email:reminder-verify')->weekly()->saturdays()->at('11:00');
         $schedule->command('email:progress-monthly')->monthlyOn(25, '19:00');
+        $schedule->command('email:newsletter')->dailyAt('19:00');
     }
 
     /**

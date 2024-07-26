@@ -113,15 +113,20 @@
             text-align: center;
         }
 
-        .pt-4 {
-            padding-top: 16px;
-        }
         .table-tyc a {
             font-size: 12px;
             font-weight: 400;
             line-height: 17px;
             letter-spacing: 0em;
             color: #B0B1B2;
+        }
+
+        strong, b {
+            color: #facc15 !important;
+        }
+
+        .pt-4 {
+            padding-top: 16px;
         }
 
         @media (min-width: 425px) {
@@ -134,48 +139,17 @@
 
 <body>
     <div class="body">
-        <div class="text-center pt-4">
-            <img src="https://api.finanzaspersonalesemma.com/img/logo.png" alt="Logo Emma" class="mx-auto" width="200"
-                height="57" />
+        <div class="text-center mb-10 pt-4">
+            <img
+                src="https://api.finanzaspersonalesemma.com/img/logo.png"
+                alt="Logo Emma"
+                class="mx-auto"
+                width="200"
+                height="57"
+            />
         </div>
-        <div class="text-center mb-10 mt-8">
-            <img src="https://api.finanzaspersonalesemma.com/img/emma-ref-balance.png" alt="Balance Emma" width="400"
-                height="145" class="mx-auto" />
-        </div>
-        <h1 class="text-center title mb-6">
-            Hola {{ $user->name }}!
-        </h1>
-        <p class="text-center text-montserrat mb-6">
-            Asi es como va tus finanzas en <span style="color: #facc15;">Emma</span>.
-        </p>
-        <p class="text-center text-montserrat mb-6">
-            Asi van tus finanzas en lo que va del mes
-        </p>
-        <h3 class="text-center text-avenir mb-6">
-            Ingresos: <span style="color: #22c55e;">{{ number_format($balance->income, 2, ',', '.') }}</span>
-        </h3>
-        <h3 class="text-center text-avenir mb-6">
-            Egresos: <span style="color: #ef4444;">{{ number_format(abs($balance->expensive), 2, ',', '.') }}</span>
-        </h3>
-        <h3 class="text-center text-avenir mb-6">
-            Utilidad: <span
-                style="color: {{ $balance->income + $balance->expensive < 0 ? '#ef4444' : '#22c55e' }};">{{ number_format($balance->income + $balance->expensive, 2, ',', '.') }}</span>
-        </h3>
-        <center>
-            <p class="text-center text-montserrat mb-6">
-                Estamos a pocos dias de que se acabe el mes,<br /> si te falta por ingresa informacion, que esperas para
-                reportarla
-            </p>
-            <table>
-                <tbody>
-                    <tr>
-                        <td><a href="https://finanzaspersonalesemma.com/login" style="text-decoration: none;">
-                                <div class="text-center btn mb-6">Ir a la App</div>
-                            </a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </center>
+    
+       {!! $content !!}
         <div class="mt-16" style="width: 100%; padding: 4px 0px; background: #363635;">
             <p class="text-legal mx-auto" style="width: 90%;">© Copyright 2024</p>
         </div>
