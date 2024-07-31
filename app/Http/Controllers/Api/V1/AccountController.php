@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
  
 use App\Models\Account;
 use App\Models\Movement;
 
 use App\Controllers\Accounts\AccountController as AccountControl;
 use App\Controllers\Reports\ReportController;
+
 class AccountController extends Controller
 {
     /**
@@ -310,7 +312,7 @@ class AccountController extends Controller
     {
         try {
             $user = auth()->user();
-            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
+            $movements = DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
             return response()->json($movements);
         } catch(\Illuminate\Database\QueryException $ex){
             return response([
@@ -329,8 +331,8 @@ class AccountController extends Controller
     {
         try {
             $user = auth()->user();
-            $movements = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_month_year');
-            $balance_total = \DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
+            $movements = DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_month_year');
+            $balance_total = DB::select('select * from (SELECT @user_id := '.$user->id.' i) alias, general_balance');
 
             $balance_adjust = $balance_total = array_map(function($element) {
                 $element->type = "total";

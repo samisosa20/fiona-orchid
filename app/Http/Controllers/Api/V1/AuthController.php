@@ -102,8 +102,8 @@ class AuthController extends Controller
             }
 
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
+                'name' => ucwords(strtolower($request->name)),
+                'email' => strtolower($request->email),
                 'password' => Hash::make($request->input('password')),
                 'badge_id' => $request->badge_id,
                 'permissions' => ['platform.index' => "1"]
