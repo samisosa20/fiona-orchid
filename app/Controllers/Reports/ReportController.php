@@ -207,48 +207,49 @@ class ReportController extends Controller
                 ->join('currencies', 'badge_id', 'currencies.id')
                 ->first();
 
-            $saving = 0;
-            $income = 0;
-            foreach ($group_expensive as &$value) {
-                if ($value->name === 'Ingresos') {
-                    $income = $close_open->income;
-                    $saving = $close_open->income;
-                    $value->amount = $close_open->income;
-                } else {
-                    if ($value->name === 'Gastos Fijos') {
-                        $value->amount += $close_open_transfer->expensive;
-                        $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Fijos'))[0];
+            if(count($group_expensive) > 0) {
+                $saving = 0;
+                $income = 0;
+                foreach ($group_expensive as &$value) {
+                    if ($value->name === 'Ingresos') {
+                        $income = $close_open->income;
+                        $saving = $close_open->income;
+                        $value->amount = $close_open->income;
                     } else {
-                        $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Personales'))[0];
+                        if ($value->name === 'Gastos Fijos') {
+                            $value->amount += $close_open_transfer->expensive;
+                            $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Fijos'))[0];
+                        } else {
+                            $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Personales'))[0];
+                            
+                        }
                         
+                        $value->amount = $value->amount * 1;
+                        $value->porcent = $income == 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
+                        $saving += $value->amount;
+                        
+                        $value->amount = $value->amount * 1;
+    
+                        $current_fixed_cost = floatval($value->amount);
+                        $last_fixed_cost = floatval($fixed_cost->amount);
+                        $value->variation = abs($last_fixed_cost) == 0 ? 100 : round(($current_fixed_cost - $last_fixed_cost) / abs($last_fixed_cost) * 100, 2);
                     }
-                    
-                    $value->amount = $value->amount * 1;
-                    $value->porcent = $income == 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
-                    $saving += $value->amount;
-                    
-                    $value->amount = $value->amount * 1;
-
-                    $current_fixed_cost = floatval($value->amount);
-                    $last_fixed_cost = floatval($fixed_cost->amount);
-                    $value->variation = abs($last_fixed_cost) == 0 ? 100 : round(($current_fixed_cost - $last_fixed_cost) / abs($last_fixed_cost) * 100, 2);
                 }
+                
+                $last_saving = array_reduce($last_group_expensive->toArray(), fn($acc, $curr) => $acc += $curr->amount * 1, 0);
+                $current_saving = floatval($saving);
+                $variation = abs($last_saving) == 0 ? 100 : round(($current_saving - $last_saving) / abs($last_saving) * 100, 2);
+    
+                $savingArray = [
+                    "id" => 0,
+                    "name" => "Ahorros",
+                    "amount" => $saving < 0 ? 0 : $saving,
+                    "porcent" => $saving < 0 || $income == 0 ? 0.00 : round(abs($saving) / $income * 100, 2),
+                    "variation" => $variation
+                ];
+    
+                $group_expensive->push($savingArray);
             }
-
-            
-            $last_saving = array_reduce($last_group_expensive->toArray(), fn($acc, $curr) => $acc += $curr->amount * 1, 0);
-            $current_saving = floatval($saving);
-            $variation = abs($last_saving) == 0 ? 100 : round(($current_saving - $last_saving) / abs($last_saving) * 100, 2);
-
-            $savingArray = [
-                "id" => 0,
-                "name" => "Ahorros",
-                "amount" => $saving < 0 ? 0 : $saving,
-                "porcent" => $saving < 0 || $income == 0 ? 0.00 : round(abs($saving) / $income * 100, 2),
-                "variation" => $variation
-            ];
-
-            $group_expensive->push($savingArray);
 
 
             if ($diffInDays < 90) {
