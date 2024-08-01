@@ -19,9 +19,11 @@ class ReportController extends Controller
         try {
             $user = $request->user();
 
-            $init_date = $request->query('start_date') ?? Carbon::now()->firstOfMonth()->format("Y-m-d");
-            $end_date = $request->query('end_date') ?? Carbon::now()->lastOfMonth()->format("Y-m-d");
+            $init_date = $request->query('start_date') ? Carbon::parse($request->query('start_date')) : Carbon::now()->firstOfMonth();
+            $end_date = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : Carbon::now()->lastOfMonth();
             $currency = $request->query('badge_id') ?? $user->badge_id;
+            $end_date->setHour(23)->setMinute(59)->setSecond(59);
+            $diffInDays = $init_date->diffInDays($end_date);
 
 
             $category = Category::where([
@@ -31,8 +33,26 @@ class ReportController extends Controller
                 ->first();
 
             // get balance without transferns
-            $close_open = DB::select('select open_balance , incomes as income, expensives as expensive, end_balance as utility from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . ' 00:00:00" i, @end_date := "' . $end_date . ' 23:59:59" e, @currency := ' . $currency . ' c, @category_id := ' . $category->id . ' g) alias, report_open_close_balance')[0];
-
+            $close_open = DB::select('select open_balance , incomes as income, expensives as expensive, end_balance as utility from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . '" i, @end_date := "' . $end_date . '" e, @currency := ' . $currency . ' c, @category_id := ' . $category->id . ' g) alias, report_open_close_balance')[0];
+            $last_close_open = DB::select('select open_balance , incomes as income, expensives as expensive, end_balance as utility from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . '" i, @end_date := "' . $end_date . '" e, @currency := ' . $currency . ' c, @category_id := ' . $category->id . ' g, @interval_date := ' . $diffInDays .') alias, last_report_open_close_balance')[0];
+            
+            // calc variation of the balance
+            $current_open_balance = floatval($close_open->open_balance);
+            $last_open_balance = floatval($last_close_open->open_balance);
+            $close_open->open_balance_variation = abs($last_open_balance) == 0 ? 100 : round(($current_open_balance - $last_open_balance) / abs($last_open_balance) * 100, 2);
+                        
+            $current_income = floatval($close_open->income);
+            $last_income = floatval($last_close_open->income);
+            $close_open->income_variation = abs($last_income) == 0 ? 100 : round(($current_income - $last_income) / abs($last_income) * 100, 2);
+                        
+            $current_expensive = floatval($close_open->expensive);
+            $last_expensive = floatval($last_close_open->expensive);
+            $close_open->expensive_variation = abs($last_expensive) == 0 ? 100 : round(($current_expensive - $last_expensive) / abs($last_expensive) * 100, 2);
+                        
+            $current_utility = floatval($close_open->utility);
+            $last_utility = floatval($last_close_open->utility);
+            $close_open->utility_variation = abs($last_utility) == 0 ? 100 : round(($current_utility - $last_utility) / abs($last_utility) * 100, 2);
+     
             $incomes = Movement::where([
                 ['movements.user_id', $user->id],
                 ['categories.group_id', '<>', env('GROUP_TRANSFER_ID')],
@@ -155,6 +175,22 @@ class ReportController extends Controller
                 ->groupByRaw('a.id, a.name')
                 ->orderBy('amount', 'desc')
                 ->get();
+  
+            $last_group_expensive = DB::table('groups as a')
+                ->where([
+                    ['b.user_id', $user->id],
+                    ['b.group_id', '<>', env('GROUP_TRANSFER_ID')],
+                    ['badge_id', $currency],
+                ])
+                ->whereDate('date_purchase', '>=', $init_date->subDays($diffInDays))
+                ->whereDate('date_purchase', '<=', $end_date->subDays($diffInDays))
+                ->selectRaw('a.id, a.name, ifnull(sum(amount), 0) as amount')
+                ->join('categories as b', 'b.group_id', 'a.id')
+                ->join('movements', 'b.id', 'movements.category_id')
+                ->join('accounts', 'accounts.id', 'movements.account_id')
+                ->groupByRaw('a.id, a.name')
+                ->orderBy('amount', 'desc')
+                ->get();
 
             //get transfer blanaces
             $close_open_transfer = Movement::where([
@@ -165,8 +201,8 @@ class ReportController extends Controller
                 ->whereDate('date_purchase', '>=', $init_date)
                 ->whereDate('date_purchase', '<=', $end_date)
                 ->selectRaw('ifnull(sum(if(amount > 0 , amount, 0)), 0) as income,
-            ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
-            ifnull(sum(amount), 0) as utility')
+                    ifnull(sum(if(amount < 0 , amount, 0)), 0) as expensive,
+                    ifnull(sum(amount), 0) as utility')
                 ->join('accounts', 'account_id', 'accounts.id')
                 ->join('currencies', 'badge_id', 'currencies.id')
                 ->first();
@@ -181,29 +217,44 @@ class ReportController extends Controller
                 } else {
                     if ($value->name === 'Gastos Fijos') {
                         $value->amount += $close_open_transfer->expensive;
+                        $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Fijos'))[0];
+                    } else {
+                        $fixed_cost = array_values(array_filter($last_group_expensive->toArray(), fn($v) => $v->name == 'Gastos Personales'))[0];
+                        
                     }
+                    
                     $value->amount = $value->amount * 1;
                     $value->porcent = $income == 0 ? 0.00 : round(abs($value->amount) / $income * 100, 2);
                     $saving += $value->amount;
+                    
+                    $value->amount = $value->amount * 1;
+
+                    $current_fixed_cost = floatval($value->amount);
+                    $last_fixed_cost = floatval($fixed_cost->amount);
+                    $value->variation = abs($last_fixed_cost) == 0 ? 100 : round(($current_fixed_cost - $last_fixed_cost) / abs($last_fixed_cost) * 100, 2);
                 }
             }
+
+            
+            $last_saving = array_reduce($last_group_expensive->toArray(), fn($acc, $curr) => $acc += $curr->amount * 1, 0);
+            $current_saving = floatval($saving);
+            $variation = abs($last_saving) == 0 ? 100 : round(($current_saving - $last_saving) / abs($last_saving) * 100, 2);
 
             $savingArray = [
                 "id" => 0,
                 "name" => "Ahorros",
                 "amount" => $saving < 0 ? 0 : $saving,
-                "porcent" => $saving < 0 || $income == 0 ? 0.00 : round(abs($saving) / $income * 100, 2)
+                "porcent" => $saving < 0 || $income == 0 ? 0.00 : round(abs($saving) / $income * 100, 2),
+                "variation" => $variation
             ];
 
             $group_expensive->push($savingArray);
 
-            $init = Carbon::parse($init_date);
-            $end = Carbon::parse($end_date);
 
-            if ($init->diffInDays($end) < 90) {
-                $balance = DB::select('select date, amount from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . ' 00:00:00" i, @end_date := "' . $end_date . ' 23:59:59" e, @currency := ' . $currency . ' c) alias, report_balance');
+            if ($diffInDays < 90) {
+                $balance = DB::select('select date, amount from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . '" i, @end_date := "' . $end_date . '" e, @currency := ' . $currency . ' c) alias, report_balance');
             } else {
-                $balance = DB::select('select date, amount from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . ' 00:00:00" i, @end_date := "' . $end_date . ' 23:59:59" e, @currency := ' . $currency . ' c) alias, report_global_balance');
+                $balance = DB::select('select date, amount from (SELECT @user_id := ' . $user->id . ' u, @init_date := "' . $init_date . '" i, @end_date := "' . $end_date . '" e, @currency := ' . $currency . ' c) alias, report_global_balance');
             }
 
             $acumAux = 0;
@@ -225,8 +276,8 @@ class ReportController extends Controller
                 ['user_id', $user->id],
                 ['badge_id', $currency],
                 ['period_id', 1],
-                ['year', '>=', $init->year],
-                ['year', '<=', $end->year],
+                ['year', '>=', $init_date->year],
+                ['year', '<=', $end_date->year],
             ])
                 ->with(['category'])
                 ->addSelect([
@@ -241,7 +292,7 @@ class ReportController extends Controller
                 ])
                 ->get();
 
-            $diffMonth = $end->diffInMonths($init) + 1;
+            $diffMonth = $end_date->diffInMonths($init_date) + 1;
 
             foreach ($budgets_monthly as &$budget) {
                 $budget->amount = $budget->amount * $diffMonth;
