@@ -121,8 +121,13 @@
             color: #B0B1B2;
         }
 
-        strong, b {
+        strong,
+        b {
             color: #facc15 !important;
+        }
+
+        .ql-indent-1 {
+            margin-left: 16px;
         }
 
         .pt-4 {
@@ -140,16 +145,11 @@
 <body>
     <div class="body">
         <div class="text-center mb-10 pt-4">
-            <img
-                src="https://api.finanzaspersonalesemma.com/img/logo.png"
-                alt="Logo Emma"
-                class="mx-auto"
-                width="200"
-                height="57"
-            />
+            <img src="https://api.finanzaspersonalesemma.com/img/logo.png" alt="Logo Emma" class="mx-auto" width="200"
+                height="57" />
         </div>
-    
-       {!! $content !!}
+
+        {!! $content !!}
         <div class="mt-16" style="width: 100%; padding: 4px 0px; background: #363635;">
             <p class="text-legal mx-auto" style="width: 90%;">© Copyright 2024</p>
         </div>
