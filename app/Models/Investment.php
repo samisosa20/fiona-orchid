@@ -57,12 +57,12 @@ class Investment extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
-    
+
     public function movements()
     {
-        return $this->hasMany(Movement::class, 'investment_id', 'id')->with(['account', 'category', 'event', 'transferIn', 'transferOut']);
+        return $this->hasMany(Movement::class, 'investment_id', 'id')->with(['account', 'category', 'event', 'transferIn', 'transferOut'])->limit(50);
     }
-    
+
     public function appreciations()
     {
         return $this->hasMany(InvestmentAppreciation::class, 'investment_id', 'id');
@@ -72,5 +72,4 @@ class Investment extends Model
     {
         return $this->hasOne(Currency::class, 'id', 'badge_id');
     }
-    
 }

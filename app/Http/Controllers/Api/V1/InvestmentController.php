@@ -153,7 +153,7 @@ class InvestmentController extends Controller
             ['user_id', $user->id],
             ['id', $id]
         ])
-            ->with(['currency', 'movements', 'appreciations'])
+            ->with(['currency', 'movements'])
             ->first();
 
         $data->returns = Movement::where([
@@ -169,6 +169,17 @@ class InvestmentController extends Controller
             ->selectRaw('sum(amount * -1) as amount')
             ->first()
             ->amount * 1;
+
+        $data->appreciations = InvestmentAppreciation::where([
+            ['investment_id', $data->id]
+        ])
+            ->addSelect([
+                'investment' => Movement::selectRaw('SUM(amount * -1)')
+                    ->where('movements.investment_id', $data->id)
+                    ->where('movements.add_withdrawal', 1)
+                    ->whereColumn('movements.date_purchase', '<=', 'investment_appreciations.date_appreciation')
+            ])
+            ->get();
 
         $appretiation = InvestmentAppreciation::where([
             ['investment_id', $data->id]
